@@ -1,49 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Acms\Plugins\BlockEditorImageFloat;
 
+use Acms\Plugins\BlockEditorImageFloat\Services\AssetRegistrar;
+
 /**
- * Extension points (hooks).
- *
- * a-blog cms calls a same-named method on the attached hook object *if it exists*, at specific
- * points during request handling. See the bundled hook stub at extension/acms/Hook.php for the
- * full list of available hook methods and their signatures. Remove the methods you don't need.
+ * Extension points (hooks). Kept thin: the logic lives in Services\AssetRegistrar.
  */
 class Hook
 {
     /**
-     * Example: extend the template global variables.
+     * Register the JS / CSS on admin screens (which include the entry editor).
      *
-     * @param \Field $globalVars
-     * @return void
+     * @param string $res The built HTML (unused)
      */
-    public function extendsGlobalVars(\Field &$globalVars): void
+    public function afterBuild(string &$res): void
     {
-        // $globalVars->set('BLOCK_EDITOR_IMAGE_FLOAT_KEY', 'value');
-    }
-
-    /**
-     * Example: add a custom cache rule.
-     *
-     * @param string $customRuleString
-     * @return void
-     */
-    public function addCacheRule(string &$customRuleString): void
-    {
-        // $customRuleString = UA_GROUP; // e.g. vary the cache by device
-    }
-
-    /**
-     * Called while the Twig Environment is being built.
-     * Register Twig filters / functions / extensions here.
-     *
-     * @param \Acms\Services\Template\Twig $twig
-     * @return void
-     */
-    public function extendsTwig(\Acms\Services\Template\Twig $twig): void
-    {
-        // $twig->registerFilter('jp_date', fn(string $iso) => date('Y-m-d', strtotime($iso)));
-        // $twig->registerFunction('block_editor_image_float_label', [SampleService::class, 'label']);
-        // $twig->registerExtension(new BlockEditorImageFloatTwigExtension());
+        (new AssetRegistrar())->register(
+            defined('ADMIN') ? ADMIN : null,
+            defined('DIR_OFFSET') ? (string) DIR_OFFSET : '',
+        );
     }
 }

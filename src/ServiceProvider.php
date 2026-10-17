@@ -3,22 +3,12 @@
 namespace Acms\Plugins\BlockEditorImageFloat;
 
 use ACMS_App;
-use Acms\Services\Common\CorrectorFactory;
 use Acms\Services\Common\HookFactory;
-use Acms\Services\Common\InjectTemplate;
-use Acms\Services\Common\ValidatorFactory;
-use Acms\Services\Facades\Twig;
 
 /**
  * Plugin (extension app) registration class.
  *
- * Layout (important):
- * The production code lives in `src/`, and `src/` is what gets deployed as the plugin root
- * (`extension/plugins/{Name}/` is a symlink/mount to this repository's `src/`). The core autoloader
- * resolves `Acms\Plugins\ → extension/plugins/`, so `Acms\Plugins\BlockEditorImageFloat\ServiceProvider` maps to
- * `extension/plugins/BlockEditorImageFloat/ServiceProvider.php` = `src/ServiceProvider.php`. That is why the
- * ServiceProvider and all other classes (GET/, POST/, Services/, Modules/, ...) sit directly under
- * `src/` with no extra namespace segment. See README.md for the layout rationale.
+ * `src/` is deployed as the plugin root (`extension/plugins/BlockEditorImageFloat/`).
  */
 class ServiceProvider extends ACMS_App
 {
@@ -35,7 +25,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $author = 'appleple';
+    public $author = 'uidev1116';
 
     /**
      * @var bool
@@ -45,12 +35,12 @@ class ServiceProvider extends ACMS_App
     /**
      * @var false|string
      */
-    public $menu = 'block_editor_image_float_index';
+    public $menu = false;
 
     /**
      * @var string
      */
-    public $desc = 'A starter block_editor_image_float for a-blog cms plugin development.';
+    public $desc = 'ブロックエディターの画像ブロックにテキスト回り込み（フロート）配置を追加します。';
 
     /**
      * Boot the plugin (runs on every request while the plugin is active).
@@ -59,32 +49,7 @@ class ServiceProvider extends ACMS_App
      */
     public function init()
     {
-        // Extension points. Each factory calls a same-named method on the attached object if it exists.
-        $hook = HookFactory::singleton();
-        $hook->attach('BlockEditorImageFloatHook', new Hook());
-
-        $corrector = CorrectorFactory::singleton();
-        $corrector->attach('BlockEditorImageFloatCorrector', new Corrector());
-
-        $validator = ValidatorFactory::singleton();
-        $validator->attach('BlockEditorImageFloatValidator', new Validator());
-
-        // Inject templates into the admin UI.
-        $inject = InjectTemplate::singleton();
-        $inject->add('admin-module-select', PLUGIN_DIR . 'BlockEditorImageFloat/template/module-select.html');
-        $inject->add('admin-module-config-Sample', PLUGIN_DIR . 'BlockEditorImageFloat/template/config.html');
-
-        // Register a Twig template directory under the "block_editor_image_float" namespace.
-        Twig::addTemplatePath(PLUGIN_LIB_DIR . 'BlockEditorImageFloat/template', 'block_editor_image_float');
-
-        if (defined('ADMIN') && ADMIN === 'app_' . $this->menu) {
-            // Render the plugin settings screen written in Twig. Passing a callable to
-            // InjectTemplate lets ACMS_GET_Admin_InjectTemplate expand the returned HTML.
-            $inject->add('admin-main', static function (): string {
-                return Twig::renderTemplate('@block_editor_image_float/admin/main.twig');
-            });
-            $inject->add('admin-topicpath', PLUGIN_DIR . 'BlockEditorImageFloat/template/admin/topicpath.html');
-        }
+        HookFactory::singleton()->attach('BlockEditorImageFloatHook', new Hook());
     }
 
     /**
