@@ -64,7 +64,8 @@ final class AssetRegistrarTest extends TestCase
             'block-editor-image-float',
             '/extension/plugins/BlockEditorImageFloat/assets/index.js',
             ['position' => 'body_end', 'attrs' => ['type' => 'module']],
-        ]], $scripts);
+        ]
+        ], $scripts);
     }
 
     #[Test]
@@ -90,5 +91,12 @@ final class AssetRegistrarTest extends TestCase
     public function defaultConstructorIsUsable(): void
     {
         $this->assertFalse((new AssetRegistrar())->register(null, ''));
+    }
+
+    #[Test]
+    #[TestDox('the default constructor registers through the core Asset facade on admin screens')]
+    public function defaultConstructorRegistersThroughFacade(): void
+    {
+        $this->assertTrue((new AssetRegistrar())->register('entry-edit', ''));
     }
 }

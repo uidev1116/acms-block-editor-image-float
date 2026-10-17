@@ -32,6 +32,7 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
+        "coverage": "php -d pcov.enabled=1 -d pcov.directory=/var/www/html/extension/plugins/BlockEditorImageFloat vendor/bin/phpunit -c phpunit.coverage.xml.dist --coverage-text",
         "lint": "vendor/bin/phpcs --standard=phpcs.xml.dist",
         "format": "vendor/bin/phpcbf --standard=phpcs.xml.dist",
         "analyse": "vendor/bin/phpstan analyse",

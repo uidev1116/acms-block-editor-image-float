@@ -20,7 +20,7 @@ class Hook
     {
         (new AssetRegistrar())->register(
             defined('ADMIN') ? ADMIN : null,
-            defined('DIR_OFFSET') ? (string) DIR_OFFSET : '',
+            defined('DIR_OFFSET') ? DIR_OFFSET : '',
         );
     }
 }
