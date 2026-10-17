@@ -6,9 +6,9 @@ a-blog cms のブロックエディターに機能を追加する**独立した�
 
 作成 2026-10-18 ／ 対象 @ablogcms/* 3.2.37（Tiptap 3.3x / React 19） ／ ビルド Vite 8 ライブラリモード（IIFE） ／ plugins/BlockEditorImageFloat/
 
-> **UI パターンはユーザーが選ぶ（未決定）**
+> **UI パターン：A1（独立トグル 2 つ）に決定**
 >
-> ツールバーの形は UI モック（バックエンドの `docs/block-editor-plugins/image-float/ui-mock.html`。手元で見る用でコミットしない。要約は付録） で 4 パターン（A1〜A4）を比較中。本書のコード例は 【推奨】 案 A1（独立トグル 2 つ）で書いてある。A2・A3 に決まった場合はツールバー部分が `BlockMenuRenderItem`（React）になる。保存形式（4.2）はどの案でも同じ。 選んだパターン ID は、実装セッションへのプロンプト（手順書（バックエンドの `docs/block-editor-plugins/runbook.html`。手元で見る用でコミットしない））に書き添えること。
+> 4 パターン（A1〜A4）の比較のうち A1 を採用した（UI モックと付録の要約は手元用でコミットしない）。保存形式（4.2）はどの案でも同じ。
 
 ## 1. 概要とゴール
 
@@ -619,3 +619,28 @@ export const resources = {
 | A2 | 「回り込み」ドロップダウン（なし・左・右） | ボタン 1 つ分の幅。アイコンが状態に応じて変わる。CKEditor の分割ボタンに近い | 2 クリック必要。開かないと選択肢が見えない | `BlockMenuRenderItem` ＋ React。メニューの位置合わせ等を自前で作る |
 | A3 | 配置メニューに統合（寄せ 3 ＋ 回り込み 2 の 5 択） | 配置の選択肢が 1 か所にそろう | コアの寄せボタンは消せないので同じ操作が 2 か所に並ぶ。2 クリック | `BlockMenuRenderItem` ＋ React |
 | A4 | 回り込みトグル 1 つ ＋ 既存の左寄せ・右寄せ | ボタン 1 つで ON/OFF。方向は既存の寄せを使う | 中央のときは無効。回り込み中はコアの寄せボタンが未選択に見える | `BlockMenuButtonItem` × 1。React 不要 |
+
+## 付録：実装時に設計から変えた点（2026-10-18）
+
+| 項目 | 設計書 | 実装 | 理由 |
+|---|---|---|---|
+| Node のバージョン | 指定なし | `.node-version` / `volta` = 22.19.0 | Vite 8 は Node 20.19 以上が必要。バックエンド直下の volta は 20.16.0 のため、プラグイン側で固定した。 |
+| `index.ts` の起動条件 | `register()` を無条件に呼ぶ | `window.ACMS?.plugins` がある時だけ `register()` | 実機で、`ACMS.plugins` が無いページ（管理画面内の一部画面）に JS が読み込まれ `register()` が例外を投げた（U-1）。設計書 3.5 の「念のため JS 側でも」を実装に反映。 |
+| `unsetImageFloat` | 常に `align: 'center'` | フロート中のときだけ中央に戻す（それ以外は `false`） | 左・右寄せなど既存の配置を誤って中央に上書きしないため。 |
+| 既定幅の検証 | `typeof === 'string'` のみ | 空文字・`100%` は 50% に置き換える（`resolveDefaultWidth`） | `100%` を設定すると回り込む余地が無いまま適用されるため。 |
+| `Hook::afterBuild` | `Hook` に判定とパス組み立てを直書き | `Services\AssetRegistrar` に分離し、Asset ファサードの呼び出しをコンストラクターで差し替え可能に | 3.5 の方針どおり単体テストするため。`ADMIN` は文字列かつ空でないときに真とする。 |
+| PHPUnit | Unit と Integration の 2 スイート | Unit のみ（Integration ディレクトリは削除） | サンプルのテストを削除したため。 |
+| カバレッジ | 指定なし | vitest は 90% しきい値（`npm run test:coverage`）、PHP は `composer coverage`（pcov。`phpunit.coverage.xml.dist`） | TDD とカバレッジ 90% 以上の方針。コアの autoload は `extension/plugins/` 側のパスを使うため、PHP のカバレッジはそのパスを対象にした別設定が必要。 |
+| CI | `frontend` ジョブは typecheck / test / build / diff | `npm run test:coverage` に置き換え、`quality` ジョブで PHP のカバレッジも実行 | 同上。 |
+| ツール | `@tiptap/core` のみ型用 | `@tiptap/pm`・`@tiptap/extensions`（テストの Undo 用）・`jsdom`・`@vitest/coverage-v8`・`@types/node` を devDependencies に追加 | テストで本物の Tiptap `Editor` を動かすため。 |
+
+## 付録：実機確認の結果（U-1〜U-6）
+
+| # | 結果 |
+|---|---|
+| U-1 | 管理画面のエントリー編集で `ADMIN` が真になり JS / CSS が出力される。公開側のページには出力されない。ただし `ACMS.plugins` が無い管理画面のページにも読み込まれるため、JS 側のガードが必要（上表）。公開側テーマ上のダイレクト編集は未確認。 |
+| U-2 | `type="module"` の `register()` 時点で `ACMS.plugins`・`ACMS.Library.React` が存在する。 |
+| U-3 | `ctx.config` は空のオブジェクト（PHP から値を渡す仕組みは未実装）。既定値 50% で動作する。 |
+| U-4 | 外側の NodeViewWrapper に回り込みを妨げる `flex` / `overflow` は無く、`style.css` のままで本文が回り込む。ドラッグハンドルの位置ずれは見られなかった。 |
+| U-5 | キャプションは入力欄（ツールバーのポップオーバー）で編集し、選択は NodeSelection のまま。回り込み中でも `align` は変わらない。 |
+| U-6 | コアの配置ボタンはエラーを出さないが、フロート中はアイコンが空になり `aria-label` が `配置: undefined` になる（コアの表示の不整合。操作は可能）。 |
