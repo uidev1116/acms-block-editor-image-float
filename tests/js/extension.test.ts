@@ -111,6 +111,26 @@ describe('commands', () => {
     expect(imageAttrs(editor)).toMatchObject({ align: 'center', displayWidth: '50%' });
   });
 
+  it('unsetImageFloat leaves a non-float alignment untouched', () => {
+    editor = createEditor({ align: 'right', displayWidth: '50%' });
+    expect(editor.commands.unsetImageFloat()).toBe(false);
+    expect(imageAttrs(editor).align).toBe('right');
+  });
+
+  it.each(['', '100%', '  '])('falls back to the built-in default for defaultWidth %j', (bad) => {
+    editor = createEditor({}, bad);
+    editor.commands.setImageFloat('left');
+    expect(imageAttrs(editor).displayWidth).toBe('50%');
+  });
+
+  it('does nothing when no image block is selected', () => {
+    editor = createEditor();
+    editor.commands.setTextSelection(editor.state.doc.child(0).nodeSize + 2);
+    expect(editor.commands.setImageFloat('left')).toBe(false);
+    expect(editor.commands.toggleImageFloat('right')).toBe(false);
+    expect(editor.state.doc.child(0).attrs.align).toBe('center');
+  });
+
   it('toggleImageFloat toggles on, off, and switches sides', () => {
     editor = createEditor();
     editor.commands.toggleImageFloat('left');

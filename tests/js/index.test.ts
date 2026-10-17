@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const createImageFloatExtension = vi.fn(() => 'EXTENSION');
-vi.mock('../../frontend/extension', () => ({ createImageFloatExtension }));
+vi.mock('../../frontend/extension', () => ({ createImageFloatExtension, FALLBACK_WIDTH: '50%' }));
 vi.mock('../../frontend/style.css', () => ({}));
 
 type Setup = (ctx: unknown) => void;

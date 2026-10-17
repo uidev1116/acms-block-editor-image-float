@@ -6,6 +6,7 @@ export type FloatSide = 'left' | 'right';
 export const FLOAT_ALIGN = { left: 'float-left', right: 'float-right' } as const satisfies Record<FloatSide, string>;
 const DEFAULT_ALIGN = 'center'; // コアの imageBlock.align の既定値
 const NODE_NAME = 'imageBlock';
+export const FALLBACK_WIDTH = '50%';
 
 /** align の値からフロートの向きを得る。回り込みの判定はここに集約する（コアが align の値を制限した場合の影響範囲を絞る） */
 export const floatSideOf = (align: unknown): FloatSide | null =>
@@ -16,6 +17,10 @@ export const isFloatAlign = (align: unknown): boolean => floatSideOf(align) !== 
 /** 表示幅が 100%（または未設定）だと回り込む余地が無いので既定幅にする */
 export const needsDefaultWidth = (displayWidth: unknown): boolean =>
   displayWidth == null || displayWidth === '' || displayWidth === '100%';
+
+/** 既定幅として使えない値（空・100%）は、回り込む余地が無いので組み込みの既定値に置き換える */
+export const resolveDefaultWidth = (width: unknown): string =>
+  typeof width === 'string' && !needsDefaultWidth(width.trim()) ? width.trim() : FALLBACK_WIDTH;
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -32,7 +37,8 @@ interface ImageFloatOptions {
   blockMenu: BlockMenuToolbarItem[];
 }
 
-export function createImageFloatExtension({ core }: Tiptap, { defaultWidth }: { defaultWidth: string }) {
+export function createImageFloatExtension({ core }: Tiptap, options: { defaultWidth: string }) {
+  const defaultWidth = resolveDefaultWidth(options.defaultWidth);
   return core.Extension.create<ImageFloatOptions>({
     name: 'imageFloat',
     addOptions() {
@@ -61,8 +67,10 @@ export function createImageFloatExtension({ core }: Tiptap, { defaultWidth }: { 
           },
         unsetImageFloat:
           () =>
-          ({ commands }) =>
-            commands.updateAttributes(NODE_NAME, { align: DEFAULT_ALIGN }),
+          ({ editor, commands }) =>
+            isFloatAlign(editor.getAttributes(NODE_NAME).align)
+              ? commands.updateAttributes(NODE_NAME, { align: DEFAULT_ALIGN })
+              : false,
         toggleImageFloat:
           (side) =>
           ({ editor, commands }) =>
