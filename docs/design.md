@@ -641,6 +641,6 @@ export const resources = {
 | U-1 | 管理画面のエントリー編集で `ADMIN` が真になり JS / CSS が出力される。公開側のページには出力されない。ただし `ACMS.plugins` が無い管理画面のページにも読み込まれるため、JS 側のガードが必要（上表）。公開側テーマ上のダイレクト編集は未確認。 |
 | U-2 | `type="module"` の `register()` 時点で `ACMS.plugins`・`ACMS.Library.React` が存在する。 |
 | U-3 | `ctx.config` は空のオブジェクト（PHP から値を渡す仕組みは未実装）。既定値 50% で動作する。 |
-| U-4 | 外側の NodeViewWrapper に回り込みを妨げる `flex` / `overflow` は無く、`style.css` のままで本文が回り込む。ドラッグハンドルの位置ずれは見られなかった。 |
+| U-4 | 外側の NodeViewWrapper に回り込みを妨げる `flex` / `overflow` は無く、`style.css` のままで本文が回り込む。ドラッグハンドルの位置は未確認。 |
 | U-5 | キャプションは入力欄（ツールバーのポップオーバー）で編集し、選択は NodeSelection のまま。回り込み中でも `align` は変わらない。 |
 | U-6 | コアの配置ボタンはエラーを出さないが、フロート中はアイコンが空になり `aria-label` が `配置: undefined` になる（コアの表示の不整合。操作は可能）。 |
