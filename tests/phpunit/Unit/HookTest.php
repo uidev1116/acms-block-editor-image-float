@@ -21,4 +21,15 @@ final class HookTest extends TestCase
 
         $this->assertSame('<html></html>', $res);
     }
+
+    #[Test]
+    #[TestDox('afterBuild() accepts a non-string response without a TypeError')]
+    public function afterBuildAcceptsAnyResponseType(): void
+    {
+        $res = null;
+
+        (new Hook())->afterBuild($res);
+
+        $this->assertNull($res);
+    }
 }

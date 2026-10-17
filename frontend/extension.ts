@@ -15,12 +15,19 @@ export const floatSideOf = (align: unknown): FloatSide | null =>
 export const isFloatAlign = (align: unknown): boolean => floatSideOf(align) !== null;
 
 /** 表示幅が 100%（または未設定）だと回り込む余地が無いので既定幅にする */
-export const needsDefaultWidth = (displayWidth: unknown): boolean =>
-  displayWidth == null || displayWidth === '' || displayWidth === '100%';
+export const needsDefaultWidth = (displayWidth: unknown): boolean => {
+  if (displayWidth == null || displayWidth === '') return true;
+  const match = /^\s*(\d+(?:\.\d+)?)\s*%\s*$/.exec(String(displayWidth));
+  return match !== null && Number(match[1]) >= 99.9;
+};
 
-/** 既定幅として使えない値（空・100%）は、回り込む余地が無いので組み込みの既定値に置き換える */
-export const resolveDefaultWidth = (width: unknown): string =>
-  typeof width === 'string' && !needsDefaultWidth(width.trim()) ? width.trim() : FALLBACK_WIDTH;
+/** 既定幅として使えない値（書式が不正・0 以下・全幅）は、組み込みの既定値に置き換える */
+export const resolveDefaultWidth = (width: unknown): string => {
+  const value = typeof width === 'string' ? width.trim() : '';
+  const match = /^(\d+(?:\.\d+)?)(%|px)$/.exec(value);
+  if (match === null || Number(match[1]) <= 0 || needsDefaultWidth(value)) return FALLBACK_WIDTH;
+  return value;
+};
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

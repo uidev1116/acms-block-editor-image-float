@@ -14,9 +14,9 @@ class Hook
     /**
      * Register the JS / CSS on admin screens (which include the entry editor).
      *
-     * @param string $res The built HTML (unused)
+     * @param mixed $res The built HTML (unused). Left untyped like the core hook stub.
      */
-    public function afterBuild(string &$res): void
+    public function afterBuild(&$res): void
     {
         (new AssetRegistrar())->register(
             defined('ADMIN') ? ADMIN : null,

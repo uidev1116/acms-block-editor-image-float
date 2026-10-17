@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Acms\Plugins\BlockEditorImageFloat\Tests\Unit;
 
+use Acms\Plugins\BlockEditorImageFloat\Hook;
 use Acms\Plugins\BlockEditorImageFloat\ServiceProvider;
+use Acms\Services\Common\HookFactory;
 use Acms\TestingFramework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -44,6 +46,6 @@ final class ServiceProviderTest extends TestCase
     {
         (new ServiceProvider())->init();
 
-        $this->addToAssertionCount(1);
+        $this->assertInstanceOf(Hook::class, HookFactory::singleton()->getHook('BlockEditorImageFloatHook'));
     }
 }

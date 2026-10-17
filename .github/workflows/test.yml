@@ -55,7 +55,9 @@ jobs:
       - run: npm run test:coverage
       - run: npm run build
       - name: Built assets (src/assets) must be committed
-        run: git diff --exit-code src/assets
+        run: |
+          git diff --exit-code src/assets
+          test -z "$(git status --porcelain src/assets)"  # also catches new untracked chunks
 
   # Run PHPUnit against every supported PHP (and a-blog cms) version.
   phpunit:
@@ -79,9 +81,8 @@ jobs:
 
       # Install deps with the testing framework pinned to the a-blog cms version under test.
       # `composer require` (rather than editing composer.json then `composer install`) applies the
-      # constraint whether or not a composer.lock is committed: plugins built from this block_editor_image_float
-      # typically commit their lock, and `install` would then install the locked version and ignore
-      # the freshly-changed constraint. matrix.acms is a trusted, workflow-defined value;
+      # constraint whether or not a composer.lock is committed (this plugin commits it, and `install`
+      # would then install the locked version and ignore the freshly-changed constraint). matrix.acms is a trusted, workflow-defined value;
       # single-quoted to avoid the shell globbing ".*".
       - name: Install dependencies (testing-framework matched to a-blog cms ${{ matrix.acms }})
         run: docker compose exec -T acms bash -lc "cd /workspace && composer require --dev --no-interaction --no-progress 'ablogcms/testing-framework:${{ matrix.acms }}.*'"

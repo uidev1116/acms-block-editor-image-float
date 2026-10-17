@@ -14,19 +14,32 @@ vi.mock('@ablogcms/i18n', () => ({ t: (key: string) => `t(${key})` }));
 
 const tiptap = { core } as unknown as Tiptap;
 
-// コアの imageBlock と同じ属性（align / displayWidth）だけを持つ最小のノード
+// コア（@ablogcms/block-editor の ImageBlock）の保存・読み込みを最小限に再現したノード。
+// 実コアそのものではない（コア更新時の検知は README の確認項目と実機確認で行う）が、
+// align / displayWidth が data-align / data-width として往復する点はコアと同じ形にしてある。
 const ImageBlock = core.Node.create({
   name: 'imageBlock',
   group: 'block',
   atom: true,
   addAttributes() {
     return {
-      align: { default: 'center' },
-      displayWidth: { default: '100%' },
+      align: { default: 'center', renderHTML: (attrs) => ({ 'data-align': attrs.align }) },
+      displayWidth: { default: '100%', renderHTML: (attrs) => ({ 'data-width': attrs.displayWidth }) },
     };
   },
-  parseHTML: () => [{ tag: 'figure' }],
-  renderHTML: ({ HTMLAttributes }) => ['figure', HTMLAttributes],
+  parseHTML: () => [
+    {
+      tag: 'figure',
+      getAttrs: (el) => {
+        const parent = (el as HTMLElement).closest('[data-type="imageBlock"]');
+        return {
+          align: parent?.getAttribute('data-align') || 'center',
+          displayWidth: parent?.getAttribute('data-width'),
+        };
+      },
+    },
+  ],
+  renderHTML: ({ HTMLAttributes }) => ['div', { 'data-type': 'imageBlock', ...HTMLAttributes }, ['figure']],
 });
 const Doc = core.Node.create({ name: 'doc', topNode: true, content: 'block+' });
 const Paragraph = core.Node.create({
@@ -78,6 +91,10 @@ describe('pure helpers', () => {
     ['50%', false],
     ['30%', false],
     ['320px', false],
+    [' 100% ', true],
+    ['100 %', true],
+    ['100.0%', true],
+    ['99.9%', true],
   ])('needsDefaultWidth(%j) = %s', (value, expected) => {
     expect(needsDefaultWidth(value)).toBe(expected);
   });
@@ -117,7 +134,7 @@ describe('commands', () => {
     expect(imageAttrs(editor).align).toBe('right');
   });
 
-  it.each(['', '100%', '  '])('falls back to the built-in default for defaultWidth %j', (bad) => {
+  it.each(['', '100%', '  ', 'abc', '0%', '-5%', '150%', '0px'])('falls back to the built-in default for defaultWidth %j', (bad) => {
     editor = createEditor({}, bad);
     editor.commands.setImageFloat('left');
     expect(imageAttrs(editor).displayWidth).toBe('50%');
@@ -155,10 +172,11 @@ describe('commands', () => {
     editor = createEditor();
     editor.commands.toggleImageFloat('left');
     const html = editor.getHTML();
-    expect(html).toContain('align="float-left"');
+    expect(html).toContain('data-align="float-left"');
+    expect(html).toContain('data-width="50%"');
     editor.commands.setContent(html);
     editor.commands.setNodeSelection(0);
-    expect(imageAttrs(editor).align).toBe('float-left');
+    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '50%' });
   });
 });
 

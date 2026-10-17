@@ -30,7 +30,9 @@ describe('built bundle', () => {
     expect(code.length).toBeLessThan(5 * 1024);
     expect(code).not.toMatch(/prosemirror/i);
     expect(code).not.toMatch(/__SECRET_INTERNALS|react\.element|react\.transitional/);
-    expect(code).not.toContain('Extension.create=');
+    // ホストのグローバルや tiptap / react のモジュールを直接参照していない（実体はファクトリ引数で受け取る）
+    expect(code).not.toMatch(/ACMS\.Library|@tiptap|from\s*["']react/);
+    expect(code).not.toMatch(/Extension\.create/);
   });
 
   it('does nothing (and does not throw) without ACMS.plugins', () => {
