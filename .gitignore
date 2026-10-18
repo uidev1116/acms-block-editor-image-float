@@ -36,3 +36,6 @@ Thumbs.db
 # Node
 node_modules/
 *.tsbuildinfo
+
+# Build output (vite build). Not committed: built in CI/setup and bundled only into the release zip.
+/src/assets/

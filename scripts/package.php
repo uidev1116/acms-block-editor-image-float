@@ -33,6 +33,13 @@ try {
         }
     }
 
+    // src/assets is build output and is not committed: refuse to package a zip without it.
+    foreach (['index.js', 'index.css'] as $asset) {
+        if (!is_file($root . '/src/assets/' . $asset)) {
+            throw new RuntimeException("src/assets/{$asset} not found. Run `npm ci && npm run build` before packaging.");
+        }
+    }
+
     $zipPath = (new Packager($root))->build();
     printf("Created %s (%s bytes)\n", $zipPath, number_format((float) filesize($zipPath)));
 } catch (Throwable $e) {

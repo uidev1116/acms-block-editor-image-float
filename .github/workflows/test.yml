@@ -39,7 +39,7 @@ jobs:
         if: failure()
         run: docker compose logs acms
 
-  # Type check, unit tests (with the coverage threshold), build, and "built assets are committed" check.
+  # Type check, unit tests (with the coverage threshold) and build. Built assets (src/assets) are not committed.
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -54,10 +54,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:coverage
       - run: npm run build
-      - name: Built assets (src/assets) must be committed
-        run: |
-          git diff --exit-code src/assets
-          test -z "$(git status --porcelain src/assets)"  # also catches new untracked chunks
+      - name: Build output exists
+        run: test -s src/assets/index.js && test -s src/assets/index.css
 
   # Run PHPUnit against every supported PHP (and a-blog cms) version.
   phpunit:

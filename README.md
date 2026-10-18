@@ -39,7 +39,7 @@ npm run dev            # vite build --watch（src/assets に出力）
 npm run typecheck
 npm test               # vitest
 npm run test:coverage  # カバレッジ 90% 以上を要求
-npm run build          # src/assets をビルド。コミットすること
+npm run build          # src/assets をビルド（コミットしない。.gitignore 済み）
 ```
 
 PHP は Docker（`docker compose up -d`。ポートは `.env` の `ACMS_PORT`）で実行します。
@@ -49,7 +49,7 @@ docker compose exec acms bash -lc "cd /workspace && composer install && composer
 docker compose exec acms bash -lc "cd /workspace && ACMS_ROOT=/var/www/html vendor/bin/acms-create-database && composer coverage"
 ```
 
-バックエンドのデプロイは `src/` をそのまま rsync するため、`src/assets/`（ビルド成果物）はコミットが必要です。CI がビルドし直して差分が出ないことを検査します。
+`src/assets/`（ビルド成果物）は Git に含めません。リリース（`v*` タグの push）時に `release.yml` がビルドし、配布用の zip にだけ含めます。ソースから使う場合（バックエンドの submodule など）は `npm ci && npm run build`（`npm run setup` も同じ）でビルドしてください。
 
 ## 既知の制限
 
@@ -60,7 +60,7 @@ docker compose exec acms bash -lc "cd /workspace && ACMS_ROOT=/var/www/html vend
 
 本プラグインは画像ブロックの `align` 属性に `float-left` / `float-right` を入れる方式です。コアを更新したら次を確認してください。
 
-- `@ablogcms/*`（`package.json`）をコアと同じ版に上げ、`npm run build` した成果物をコミットする。
+- `@ablogcms/*`（`package.json`）をコアと同じ版に上げ、`npm run build` で再ビルドする。
 - 保存 → 再読み込みで `data-align="float-left"` と幅が保持されること（コアが `align` の値を `left|center|right` に制限していないか）。
 - ツールバー（`blockMenu` の `scope: 'image'`）にボタンが出ること。
 

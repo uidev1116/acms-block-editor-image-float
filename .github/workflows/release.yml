@@ -41,6 +41,20 @@ jobs:
           extensions: zip
           tools: composer
 
+      - name: Set up Node
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # src/assets (built JS / CSS) is not committed; build it so it is bundled into the zip.
+      - name: Build frontend assets
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          npm ci
+          npm run build
+
       - name: Verify tag matches ServiceProvider $version
         if: steps.guard.outputs.skip != 'true'
         run: php scripts/package.php --check-version="${GITHUB_REF_NAME#v}"

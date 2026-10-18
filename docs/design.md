@@ -175,7 +175,7 @@ acms-block-editor-image-float/                 ← GitHub: uidev1116/acms-block-
     ├── ServiceProvider.php           # $version がバージョンの正（タグと一致させる）
     ├── Hook.php                      # afterBuild() → AssetRegistrar（3.5）
     ├── Services/AssetRegistrar.php   # 読み込み判定とパス組み立て（PHPUnit で単体テスト）
-    └── assets/                       # vite build の出力（コミットする）
+    └── assets/                       # vite build の出力（コミットしない。リリース時にビルドして zip にだけ含める）
         ├── index.js
         └── index.css
 ```
@@ -376,8 +376,8 @@ class Hook
 | リポジトリ | `uidev1116/acms-block-editor-image-float`（public。ApiPreview と同じ）。既定ブランチは `master`。初回コミット（スケルトンを置換しただけの状態）だけを `master` に置き、実装は `feat/initial-implementation` ブランチで行って PR を出す。マージは人が行う。 |
 | バックエンドへの取り込み | `git submodule add git@github.com:uidev1116/acms-block-editor-image-float.git plugins/BlockEditorImageFloat`（`.gitmodules` は既存の ApiPreview と同じ SSH URL。デプロイの CI は HTTPS に読み替える）。`npm run setup`（`tools/setup.js`）が `ablogcms/extension/plugins/BlockEditorImageFloat → ../../../plugins/BlockEditorImageFloat/src` のシンボリックリンクを作る。Docker の web コンテナは `./plugins` を `/var/www/plugins` にマウントしているので、このリンクがそのまま効く。 |
 | `npm run setup` | `tools/setup.js` は各 submodule で `npm ci` → `npm run setup` を実行するので、`package.json` に `setup` スクリプトが**必須**（`"setup": "npm run build"`）。 |
-| ビルド成果物 | `src/assets/` をコミットする。バックエンドのデプロイは `plugins/BlockEditorImageFloat/src/` をそのまま rsync し、プラグインのビルドはしないため。CI で「ビルドし直しても差分が出ない」ことを検査して、コミット漏れを防ぐ。 |
-| CI（`test.yml`） | スケルトンの `quality`（phpcs・PHPStan）と `phpunit`（PHP 8.1〜8.5 × a-blog cms 3.2）はそのまま使い、`frontend` ジョブを追加する：`setup-node`（`.node-version`）→ `npm ci` → `npm run typecheck` → `npm test` → `npm run build` → `git diff --exit-code src/assets`。集約ジョブ `test` の `needs` に `frontend` を足す。 |
+| ビルド成果物 | `src/assets/` は**コミットしない**（`.gitignore`）。リリース時（`release.yml`）にビルドして配布用 zip にだけ含める。ソースから使う場合は `npm run build`（`npm run setup`）。バックエンドのデプロイが `src/` を rsync する場合は、プラグインをビルドする工程か、リリース zip の利用が必要（バックエンド側の対応事項）。 |
+| CI（`test.yml`） | スケルトンの `quality`（phpcs・PHPStan）と `phpunit`（PHP 8.1〜8.5 × a-blog cms 3.2）はそのまま使い、`frontend` ジョブを追加する：`setup-node`（`.node-version`）→ `npm ci` → `npm run typecheck` → `npm test` → `npm run build` → ビルド出力の存在確認。集約ジョブ `test` の `needs` に `frontend` を足す。 |
 | リリース | スケルトンのまま。`composer release:patch` などで `ServiceProvider::$version` を上げてタグを打ち、push すると `release.yml` が zip を GitHub Release に公開する。`package.json` の `version` と `frontend/index.ts` の `version` も同じ値にそろえる。 |
 | 本番デプロイ | プラグインの PR をマージした後、バックエンドで submodule の参照先を更新してコミットし、既存のデプロイ（`.github/workflows/deploy.yml`、rsync）で反映する。デプロイのワークフローは変更しない。**デプロイは明示的に許可されたときだけ**行う。 |
 
@@ -632,6 +632,7 @@ export const resources = {
 | PHPUnit | Unit と Integration の 2 スイート | Unit のみ（Integration ディレクトリは削除） | サンプルのテストを削除したため。 |
 | カバレッジ | 指定なし | vitest は 90% しきい値（`npm run test:coverage`）、PHP は `composer coverage`（pcov。`phpunit.coverage.xml.dist`） | TDD とカバレッジ 90% 以上の方針。コアの autoload は `extension/plugins/` 側のパスを使うため、PHP のカバレッジはそのパスを対象にした別設定が必要。 |
 | CI | `frontend` ジョブは typecheck / test / build / diff | `npm run test:coverage` に置き換え、`quality` ジョブで PHP のカバレッジも実行 | 同上。 |
+| ビルド成果物 | `src/assets/` をコミットし、CI で差分検査 | コミットしない。`release.yml` がビルドして zip にだけ含める（`scripts/package.php` は未ビルドだと失敗する） | ユーザーの指示（成果物を Git に含めない）。 |
 | ツール | `@tiptap/core` のみ型用 | `@tiptap/pm`・`@tiptap/extensions`（テストの Undo 用）・`jsdom`・`@vitest/coverage-v8`・`@types/node` を devDependencies に追加 | テストで本物の Tiptap `Editor` を動かすため。 |
 
 ## 付録：実機確認の結果（U-1〜U-6）
