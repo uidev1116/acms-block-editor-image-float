@@ -135,8 +135,7 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 
 ### ドキュメント
 
-- [設計書](docs/design.md)（実機確認の結果・設計からの変更点を含む）
-- [実機確認のスクリーンショット](docs/screenshots/)
+- [仕様書](docs/specification.md)
 
 ### 開発
 
