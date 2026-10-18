@@ -99,6 +99,11 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` で本�
   margin-inline: 1.5em 0;
 }
 
+/* 見出しの前では回り込みを止める */
+.acms-entry :is(h2, h3, h4, h5, h6) {
+  clear: both;
+}
+
 @media (max-width: 599px) {
   .acms-entry [data-type='imageBlock'][data-align^='float-'] > figure {
     float: none;
@@ -110,6 +115,20 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` で本�
 
 - `.acms-entry` は本文の基準となるクラスです。**どのクラスが本文の基準になるかは、テーマ（フロント）によって異なる**ので、自分のテーマの本文コンテナのクラス名に読み替えてください
 - 600px 未満では回り込みを解除して全幅表示にします
+- 回り込みは、画像より後ろの文章が画像の高さを超えるか、見出し（`h2`〜`h6`）が来ると止まります
+
+### 回り込みを任意の位置で止める
+
+見出し以外の位置で回り込みを止めたいときは、制作者側で用意します。グループブロックや区切り線（HR）ブロックにはクラスを付けられるので、そこに `clear: both` を指定するクラスを付けて、フロント側とエディター用の CSS に追加してください（クラス名は自由です）。
+
+```css
+.my-clear {
+  clear: both;
+}
+```
+
+本プラグインは、回り込みを止めるための専用のブロックや UI は用意しません。
+
 - 幅（`max-width`）は `<figure>` のインラインスタイルのため、狭い画面で全幅に戻すには `!important` が必要です
 
 ### 管理画面のスタイルについて
