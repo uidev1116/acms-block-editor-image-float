@@ -6,6 +6,7 @@ namespace Acms\Plugins\BlockEditorImageFloat\Tests\Unit;
 
 use Acms\Plugins\BlockEditorImageFloat\Hook;
 use Acms\Plugins\BlockEditorImageFloat\ServiceProvider;
+use Acms\Plugins\BlockEditorImageFloat\Services\Requirements;
 use Acms\Services\Common\HookFactory;
 use Acms\TestingFramework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,7 +33,10 @@ final class ServiceProviderTest extends TestCase
     {
         $provider = new ServiceProvider();
 
-        $this->assertTrue($provider->checkRequirements());
+        $this->assertSame(
+            Requirements::isSupportedAcmsVersion(defined('VERSION') ? VERSION : null),
+            $provider->checkRequirements(),
+        );
         $this->assertTrue($provider->update());
         $this->assertTrue($provider->activate());
         $this->assertTrue($provider->deactivate());

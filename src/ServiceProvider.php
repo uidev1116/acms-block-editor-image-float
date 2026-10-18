@@ -3,6 +3,7 @@
 namespace Acms\Plugins\BlockEditorImageFloat;
 
 use ACMS_App;
+use Acms\Plugins\BlockEditorImageFloat\Services\Requirements;
 use Acms\Services\Common\HookFactory;
 use Acms\Services\Common\InjectTemplate;
 
@@ -67,7 +68,7 @@ class ServiceProvider extends ACMS_App
      */
     public function checkRequirements()
     {
-        return true;
+        return Requirements::isSupportedAcmsVersion(defined('VERSION') ? VERSION : null);
     }
 
     /**
