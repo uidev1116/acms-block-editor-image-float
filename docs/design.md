@@ -520,7 +520,7 @@ export const resources = {
 
 ### 4.4 CSS（エディター用と公開側用の 2 系統）
 
-外側の `.media-image-block` ではなく**内側の `<figure>` を float させる**。外側はブロック要素のまま（高さ 0 になる）で、figure に付いているインラインの `max-width: 50%` が本文幅に対する割合として効く。外側を float させると幅が shrink-to-fit になり、`max-width` の % が循環して効かなくなるため。
+外側の `[data-type="imageBlock"]` ではなく**内側の `<figure>` を float させる**。外側はブロック要素のまま（高さ 0 になる）で、figure に付いているインラインの `max-width: 50%` が本文幅に対する割合として効く。外側を float させると幅が shrink-to-fit になり、`max-width` の % が循環して効かなくなるため。
 
 **`frontend/style.css（管理画面・エディター内。素の CSS）`**
 
@@ -530,10 +530,10 @@ export const resources = {
 
 /* 外側（NodeViewWrapper）と、その外の .react-renderer は display:block のまま。
    flex / overflow:hidden が付いていると回り込みが効かないので、付いていたら打ち消す（6 章 U-4） */
-.ProseMirror .media-image-block[data-align^="float-"] > figure { margin-block: .25em 1em; width: 100%; }
-.ProseMirror .media-image-block[data-align^="float-"] img { max-width: 100%; height: auto; }
-.ProseMirror .media-image-block[data-align="float-left"]  > figure { float: left;  margin-inline: 0 1.5em; }
-.ProseMirror .media-image-block[data-align="float-right"] > figure { float: right; margin-inline: 1.5em 0; }
+.acms-admin-block-editor .ProseMirror [data-type="imageBlock"][data-align^="float-"] > figure { margin-block: .25em 1em; width: 100%; }
+.acms-admin-block-editor .ProseMirror [data-type="imageBlock"][data-align^="float-"] img { max-width: 100%; height: auto; }
+.acms-admin-block-editor .ProseMirror [data-type="imageBlock"][data-align="float-left"]  > figure { float: left;  margin-inline: 0 1.5em; }
+.acms-admin-block-editor .ProseMirror [data-type="imageBlock"][data-align="float-right"] > figure { float: right; margin-inline: 1.5em 0; }
 
 /* 見出しの前では回り込みを止めたい場合（任意。公開側と揃えること）
 .ProseMirror :is(h2, h3) { clear: both; } */
@@ -543,12 +543,12 @@ export const resources = {
 
 ```css
 .entry-body { display: flow-root; }   /* 本文コンテナのクラス名はフロント側に合わせる */
-.media-image-block[data-align^="float-"] > figure { margin-block: .25em 1em; }
-.media-image-block[data-align^="float-"] img { max-width: 100%; height: auto; }
-.media-image-block[data-align="float-left"]  > figure { float: left;  margin-inline: 0 1.5em; }
-.media-image-block[data-align="float-right"] > figure { float: right; margin-inline: 1.5em 0; }
+[data-type="imageBlock"][data-align^="float-"] > figure { margin-block: .25em 1em; }
+[data-type="imageBlock"][data-align^="float-"] img { max-width: 100%; height: auto; }
+[data-type="imageBlock"][data-align="float-left"]  > figure { float: left;  margin-inline: 0 1.5em; }
+[data-type="imageBlock"][data-align="float-right"] > figure { float: right; margin-inline: 1.5em 0; }
 @media (max-width: 599px) {
-  .media-image-block[data-align^="float-"] > figure { float: none; max-width: 100% !important; margin-inline: 0; }
+  [data-type="imageBlock"][data-align^="float-"] > figure { float: none; max-width: 100% !important; margin-inline: 0; }
 }
 ```
 
@@ -623,6 +623,7 @@ export const resources = {
 | `Hook::afterBuild` | `Hook` に判定とパス組み立てを直書き | `Services\AssetRegistrar` に分離し、Asset ファサードの呼び出しをコンストラクターで差し替え可能に | 3.5 の方針どおり単体テストするため。`ADMIN` は文字列かつ空でないときに真とする。 |
 | 読み込み条件 | `ADMIN` が真のとき | `ADMIN` が真、または公開側でダイレクト編集が有効（`Entry::isDirectEditEnabled()`）のとき | 公開側テーマ上のダイレクト編集でもブロックエディターが出る（develop テーマが対応）ため。 |
 | エディター用 CSS | `.ProseMirror` 直下 | コアのエディターのルート `.acms-admin-block-editor` の内側に限定。独自に付けるクラス名は `acms-admin-` プレフィックス（現在は独自クラスなし） | 他の ProseMirror への副作用を避ける／命名規則。 |
+| CSS のセレクター | `.media-image-block[data-align…]` | `[data-type="imageBlock"][data-align…]`（クラス名ではなく、ノード種別を表す data-type 属性に当てる） | 見た目用のクラス名に依存しないため（ユーザー指示）。エディター内・保存 HTML のどちらにも `data-type="imageBlock"` が付く。 |
 | 設定画面 | なし | 拡張アプリの設定画面（Twig）に機能のオン / オフ（`block_editor_image_float_enabled`）を追加。オフのときは JS / CSS を読み込まない。設定はブログのコンフィグから `Config::loadBlogConfig()` で直接読む（コンフィグセットを使うブログでは `config()` に見えないため） | 運用で機能を止められるようにする（要望）。 |
 | PHPUnit | Unit と Integration の 2 スイート | Unit のみ（Integration ディレクトリは削除） | サンプルのテストを削除したため。 |
 | カバレッジ | 指定なし | vitest は 90% しきい値（`npm run test:coverage`）、PHP は `composer coverage`（pcov。`phpunit.coverage.xml.dist`） | TDD とカバレッジ 90% 以上の方針。コアの autoload は `extension/plugins/` 側のパスを使うため、PHP のカバレッジはそのパスを対象にした別設定が必要。 |

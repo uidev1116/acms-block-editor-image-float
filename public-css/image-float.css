@@ -3,27 +3,27 @@
   display: flow-root; /* 本文コンテナのクラス名はフロント側に合わせる */
 }
 
-.media-image-block[data-align^='float-'] > figure {
+[data-type="imageBlock"][data-align^='float-'] > figure {
   margin-block: 0.25em 1em;
 }
 
-.media-image-block[data-align^='float-'] img {
+[data-type="imageBlock"][data-align^='float-'] img {
   max-width: 100%;
   height: auto;
 }
 
-.media-image-block[data-align='float-left'] > figure {
+[data-type="imageBlock"][data-align='float-left'] > figure {
   float: left;
   margin-inline: 0 1.5em;
 }
 
-.media-image-block[data-align='float-right'] > figure {
+[data-type="imageBlock"][data-align='float-right'] > figure {
   float: right;
   margin-inline: 1.5em 0;
 }
 
 @media (max-width: 599px) {
-  .media-image-block[data-align^='float-'] > figure {
+  [data-type="imageBlock"][data-align^='float-'] > figure {
     float: none;
     max-width: 100% !important; /* figure のインライン max-width を打ち消す */
     margin-inline: 0;
