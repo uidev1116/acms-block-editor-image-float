@@ -1,10 +1,9 @@
 # Keep the GitHub Actions used by the workflows up to date. Patch and minor bumps are auto-merged
 # by .github/workflows/dependabot-auto-merge.yml once CI passes; major bumps are reviewed by hand.
 #
-# Composer is intentionally not tracked: the block_editor_image_float commits no composer.lock, so Dependabot could
-# only ever propose major constraint bumps here (the dev-tool constraints are loose caret ranges) —
-# low value. ablogcms/testing-framework is version-matched to a-blog cms by hand anyway. Generated
-# plugins commit their own lock and can enable Composer tracking themselves if they want it.
+# npm is tracked too: @ablogcms/* must match the installed a-blog cms core, so those packages are
+# ignored (bumped by hand together with the core; see README "コア更新時の確認事項").
+# Composer is not tracked: dev tools only, and ablogcms/testing-framework follows a-blog cms by hand.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -13,6 +12,19 @@ updates:
       interval: "weekly"
     groups:
       github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "@ablogcms/*"
+    groups:
+      npm-dev:
         patterns:
           - "*"
         update-types:

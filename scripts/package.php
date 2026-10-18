@@ -28,9 +28,28 @@ try {
                 fwrite(STDERR, "Version mismatch: tag='{$expected}' but ServiceProvider \$version='{$actual}'.\n");
                 exit(1);
             }
+            // The JS bundle reports package.json's version to the plugin registry: keep it in step.
+            $npmVersion = (new Packager($root))->packageJsonVersion();
+            if ($npmVersion !== $actual) {
+                fwrite(STDERR, "Version mismatch: ServiceProvider \$version='{$actual}' but package.json version='{$npmVersion}'.\n");
+                exit(1);
+            }
             echo "Version OK: {$actual}\n";
             exit(0);
         }
+    }
+
+    // src/assets is build output and is not committed: refuse to package a zip without it.
+    foreach (['index.js', 'index.css'] as $asset) {
+        if (!is_file($root . '/src/assets/' . $asset)) {
+            throw new RuntimeException("src/assets/{$asset} not found. Run `npm ci && npm run build` before packaging.");
+        }
+    }
+
+    // A development build (npm run dev) leaves source maps behind; never ship those.
+    $maps = glob($root . '/src/assets/*.map');
+    if ($maps !== false && $maps !== []) {
+        throw new RuntimeException('src/assets contains source maps (a development build). Run `npm run build` before packaging.');
     }
 
     $zipPath = (new Packager($root))->build();

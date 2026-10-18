@@ -1,0 +1,67 @@
+<header>
+  <div>
+    @include("/admin/topicpath.html")
+  </div>
+  <div>
+    <h1 class="acms-admin-admin-title js-dialog-title">
+      <!--T-->BlockEditorImageFloat 設定<!--/T-->
+    </h1>
+  </div>
+</header>
+
+<!-- BEGIN_MODULE Admin_Config -->
+<!-- BEGIN_IF [{notice_mess}/nem/] -->
+<div role="alert" class="acms-admin-alert acms-admin-alert-icon acms-admin-alert-info">
+  <span class="acms-admin-icon acms-admin-icon-news acms-admin-alert-icon-before" aria-hidden="true"></span>
+  <button
+    type="button"
+    class="js-acms-alert-close acms-admin-alert-icon-after"
+    aria-label="<!--T-->アラートを閉じる<!--/T-->"
+  >
+    ×
+  </button>
+  <!--T-->BlockEditorImageFloat 設定を保存しました<!--/T-->
+</div>
+<!-- END_IF -->
+
+<!-- BEGIN msg#error -->
+<div role="alert" class="acms-admin-alert acms-admin-alert-danger acms-admin-alert-icon">
+  <span class="acms-admin-icon acms-admin-icon-attention acms-admin-alert-icon-before" aria-hidden="true"></span>
+  <button
+    type="button"
+    class="js-acms-alert-close acms-admin-alert-icon-after"
+    aria-label="<!--T-->アラートを閉じる<!--/T-->"
+  >
+    ×
+  </button>
+  <!--T-->コンフィグを保存出来ませんでした。<!--/T-->
+</div>
+<!-- END msg#error -->
+
+<form action="" method="post" class="js-adminSave acms-admin-form">
+  <div class="js-acms_fix_marker acms_fix_bg">
+    <div class="acms-admin-form-group acms_fix_bg_index">
+      <input type="submit" name="ACMS_POST_Config" value="<!--T-->保存<!--/T-->" class="acms-admin-btn-admin acms-admin-btn-admin-primary acms-admin-btn-admin-save js-saving-splash" />
+    </div>
+  </div>
+
+  <h3 class="acms-admin-admin-title2"><!--T-->基本設定<!--/T--></h3>
+  <table class="adminTable acms-admin-table-admin-edit">
+    <tr>
+      <th>
+        <!--T-->画像の回り込み<!--/T-->
+        <i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->オフにすると、ブロックエディターのツールバーに「左に回り込み」「右に回り込み」を表示しません。保存済みの回り込みは通常の画像として表示されます。<!--/T-->"></i>
+      </th>
+      <td>
+        <input type="hidden" name="block_editor_image_float_enabled" value="off" />
+        <div class="acms-admin-form-checkbox">
+          <!-- 未保存（空）のときもオン（既定）として表示する -->
+          <input type="checkbox" name="block_editor_image_float_enabled" value="on"<!-- BEGIN_IF [{block_editor_image_float_enabled}/neq/off] --> checked="checked"<!-- END_IF --> id="input-checkbox-block_editor_image_float_enabled" />
+          <label for="input-checkbox-block_editor_image_float_enabled"><i class="acms-admin-ico-checkbox"></i><!--T-->回り込みの配置を使う<!--/T--></label>
+        </div>
+        <input type="hidden" name="config[]" value="block_editor_image_float_enabled" />
+      </td>
+    </tr>
+  </table>
+</form>
+<!-- END_MODULE Admin_Config -->

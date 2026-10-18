@@ -116,6 +116,25 @@ final class Packager
     }
 
     /**
+     * The "version" field of package.json (the version the JS bundle registers with).
+     */
+    public function packageJsonVersion(): string
+    {
+        $path = $this->root . '/package.json';
+        if (!is_file($path)) {
+            throw new RuntimeException("package.json not found at {$path}");
+        }
+        /** @var array<string, mixed>|null $data */
+        $data = json_decode((string) file_get_contents($path), true);
+        $version = is_array($data) ? ($data['version'] ?? null) : null;
+        if (!is_string($version)) {
+            throw new RuntimeException('package.json has no "version".');
+        }
+
+        return $version;
+    }
+
+    /**
      * Overwrite `$version` in src/ServiceProvider.php and return the value that was written.
      */
     public function setVersion(string $newVersion): string

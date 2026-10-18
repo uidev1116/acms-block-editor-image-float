@@ -1,49 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Acms\Plugins\BlockEditorImageFloat;
 
+use Acms\Plugins\BlockEditorImageFloat\Services\AssetRegistrar;
+use Acms\Plugins\BlockEditorImageFloat\Services\Settings;
+use Acms\Services\Facades\Entry;
+
 /**
- * Extension points (hooks).
- *
- * a-blog cms calls a same-named method on the attached hook object *if it exists*, at specific
- * points during request handling. See the bundled hook stub at extension/acms/Hook.php for the
- * full list of available hook methods and their signatures. Remove the methods you don't need.
+ * Extension points (hooks). Kept thin: the logic lives in Services\AssetRegistrar.
  */
 class Hook
 {
     /**
-     * Example: extend the template global variables.
+     * Register the JS / CSS on admin screens (which include the entry editor) and on public pages
+     * while direct edit is enabled (the block editor is mounted there too), unless the feature is
+     * switched off in the plugin settings.
      *
-     * @param \Field $globalVars
-     * @return void
+     * @param mixed $res The built HTML (unused). Left untyped like the core hook stub.
      */
-    public function extendsGlobalVars(\Field &$globalVars): void
+    public function afterBuild(&$res): void
     {
-        // $globalVars->set('BLOCK_EDITOR_IMAGE_FLOAT_KEY', 'value');
-    }
-
-    /**
-     * Example: add a custom cache rule.
-     *
-     * @param string $customRuleString
-     * @return void
-     */
-    public function addCacheRule(string &$customRuleString): void
-    {
-        // $customRuleString = UA_GROUP; // e.g. vary the cache by device
-    }
-
-    /**
-     * Called while the Twig Environment is being built.
-     * Register Twig filters / functions / extensions here.
-     *
-     * @param \Acms\Services\Template\Twig $twig
-     * @return void
-     */
-    public function extendsTwig(\Acms\Services\Template\Twig $twig): void
-    {
-        // $twig->registerFilter('jp_date', fn(string $iso) => date('Y-m-d', strtotime($iso)));
-        // $twig->registerFunction('block_editor_image_float_label', [SampleService::class, 'label']);
-        // $twig->registerExtension(new BlockEditorImageFloatTwigExtension());
+        (new AssetRegistrar())->register(
+            defined('ADMIN') ? ADMIN : null,
+            defined('DIR_OFFSET') ? DIR_OFFSET : '',
+            static fn(): bool => Entry::isDirectEditEnabled(),
+            static fn(): bool => Settings::isEnabledForBlog(defined('BID') ? BID : 1),
+            __DIR__ . '/assets',
+        );
     }
 }

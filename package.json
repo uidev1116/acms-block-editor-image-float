@@ -1,0 +1,34 @@
+{
+  "name": "acms-block-editor-image-float",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "npm run build",
+    "dev": "vite build --watch --mode development",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@ablogcms/i18n": "3.2.37",
+    "@ablogcms/plugins": "3.2.37"
+  },
+  "devDependencies": {
+    "@ablogcms/block-editor": "3.2.37",
+    "@ablogcms/types": "3.2.37",
+    "@tiptap/core": "^3.31.4",
+    "@tiptap/extensions": "^3.32.0",
+    "@tiptap/pm": "^3.32.0",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.5",
+    "jsdom": "^29.1.1",
+    "typescript": "^5",
+    "vite": "^8",
+    "vitest": "^5.0.5"
+  },
+  "volta": {
+    "node": "22.19.0"
+  }
+}
