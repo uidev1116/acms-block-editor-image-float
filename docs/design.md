@@ -161,8 +161,6 @@ acms-block-editor-image-float/                 ← GitHub: uidev1116/acms-block-
 │   ├── extension.ts                 # createImageFloatExtension(tiptap, options)
 │   ├── i18n.ts                      # ja / en リソース
 │   └── style.css                    # エディター内の素の CSS（index.ts から import）
-├── public-css/
-│   └── image-float.css              # 公開側フロントに追加する CSS（4.4。zip にも同梱）
 ├── tests/
 │   ├── phpunit/Unit/Services/AssetRegistrarTest.php
 │   └── js/
@@ -539,7 +537,7 @@ export const resources = {
 .ProseMirror :is(h2, h3) { clear: both; } */
 ```
 
-**`public-css/image-float.css（公開側フロントの本文 CSS に追加する）`**
+**公開側フロントの本文 CSS に追加する CSS（README に掲載する。ファイルとしては同梱しない）**
 
 ```css
 .entry-body { display: flow-root; }   /* 本文コンテナのクラス名はフロント側に合わせる */
@@ -629,6 +627,7 @@ export const resources = {
 | カバレッジ | 指定なし | vitest は 90% しきい値（`npm run test:coverage`）、PHP は `composer coverage`（pcov。`phpunit.coverage.xml.dist`） | TDD とカバレッジ 90% 以上の方針。コアの autoload は `extension/plugins/` 側のパスを使うため、PHP のカバレッジはそのパスを対象にした別設定が必要。 |
 | CI | `frontend` ジョブは typecheck / test / build / diff | `npm run test:coverage` に置き換え、`quality` ジョブで PHP のカバレッジも実行 | 同上。 |
 | ビルド成果物 | `src/assets/` をコミットし、CI で差分検査 | コミットしない。`release.yml` がビルドして zip にだけ含める（`scripts/package.php` は未ビルドだと失敗する） | ユーザーの指示（成果物を Git に含めない）。 |
+| 公開側 CSS | `public-css/image-float.css` として同梱（zip にも入れる） | ファイルは置かず、README にコードを掲載する | 公開側はフロントエンドの責務で、プラグインに含めないため（ユーザー指示）。 |
 | ツール | `@tiptap/core` のみ型用 | `@tiptap/pm`・`@tiptap/extensions`（テストの Undo 用）・`jsdom`・`@vitest/coverage-v8`・`@types/node` を devDependencies に追加 | テストで本物の Tiptap `Editor` を動かすため。 |
 
 ## 付録：実機確認の結果（U-1〜U-6）

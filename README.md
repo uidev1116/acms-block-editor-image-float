@@ -27,9 +27,50 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 
 ## 公開側（フロントエンド）の CSS
 
-保存される HTML は `<div class="media-image-block align-float-left" data-align="float-left" data-width="50%"><figure style="max-width: 50%;">…</figure></div>` です。
-公開側でも回り込ませるには、[public-css/image-float.css](public-css/image-float.css) の内容を**フロント側の本文 CSS に追加**してください（ヘッドレス配信の場合はフロントのリポジトリ。本プラグインは公開側に CSS を出力しません）。
-本文コンテナのセレクター（`.entry-body`）はフロント側に合わせて変更してください。600px 未満では回り込みを解除して全幅表示にします。
+保存される HTML は次の形です（`data-width` は画像の表示幅の設定値）。
+
+```html
+<div class="media-image-block align-float-left" data-type="imageBlock" data-align="float-left" data-width="50%">
+  <figure style="max-width: 50%;">…</figure>
+</div>
+```
+
+公開側（ヘッドレス配信のフロントエンドなど）には、本プラグインは CSS を出力しません。回り込ませるには、次の CSS を**フロント側の本文 CSS に追加**してください。本文コンテナのセレクター（`.entry-body`）はフロント側に合わせて変更します。600px 未満では回り込みを解除して全幅表示にします。
+
+```css
+.entry-body {
+  display: flow-root; /* 回り込みがコンテナの外にはみ出さないようにする */
+}
+
+[data-type='imageBlock'][data-align^='float-'] > figure {
+  margin-block: 0.25em 1em;
+}
+
+[data-type='imageBlock'][data-align^='float-'] img {
+  max-width: 100%;
+  height: auto;
+}
+
+[data-type='imageBlock'][data-align='float-left'] > figure {
+  float: left;
+  margin-inline: 0 1.5em;
+}
+
+[data-type='imageBlock'][data-align='float-right'] > figure {
+  float: right;
+  margin-inline: 1.5em 0;
+}
+
+@media (max-width: 599px) {
+  [data-type='imageBlock'][data-align^='float-'] > figure {
+    float: none;
+    max-width: 100% !important; /* figure のインライン max-width を打ち消す */
+    margin-inline: 0;
+  }
+}
+```
+
+幅（`max-width`）は `<figure>` のインラインスタイルなので、表示幅が 100% のままだと回り込む余地がなく、見た目は変わりません。
 
 ## 開発
 
