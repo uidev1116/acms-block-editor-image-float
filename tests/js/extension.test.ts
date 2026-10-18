@@ -7,7 +7,6 @@ import {
   FLOAT_ALIGN,
   floatSideOf,
   isFloatAlign,
-  needsDefaultWidth,
 } from '../../frontend/extension';
 
 vi.mock('@ablogcms/i18n', () => ({ t: (key: string) => `t(${key})` }));
@@ -50,9 +49,9 @@ const Paragraph = core.Node.create({
 });
 const Text = core.Node.create({ name: 'text', group: 'inline' });
 
-const createEditor = (attrs: Record<string, unknown> = {}, defaultWidth = '50%') => {
+const createEditor = (attrs: Record<string, unknown> = {}) => {
   const editor = new core.Editor({
-    extensions: [Doc, Paragraph, Text, ImageBlock, UndoRedo, createImageFloatExtension(tiptap, { defaultWidth })],
+    extensions: [Doc, Paragraph, Text, ImageBlock, UndoRedo, createImageFloatExtension(tiptap)],
     content: {
       type: 'doc',
       content: [
@@ -82,44 +81,22 @@ describe('pure helpers', () => {
     expect(isFloatAlign('right')).toBe(false);
     expect(isFloatAlign(null)).toBe(false);
   });
-
-  it.each([
-    [undefined, true],
-    [null, true],
-    ['', true],
-    ['100%', true],
-    ['50%', false],
-    ['30%', false],
-    ['320px', false],
-    [' 100% ', true],
-    ['100 %', true],
-    ['100.0%', true],
-    ['99.9%', true],
-  ])('needsDefaultWidth(%j) = %s', (value, expected) => {
-    expect(needsDefaultWidth(value)).toBe(expected);
-  });
 });
 
 describe('commands', () => {
   let editor: core.Editor;
   afterEach(() => editor.destroy());
 
-  it('setImageFloat sets align and the default width when the width is 100%', () => {
+  it('setImageFloat sets align only and never touches the display width', () => {
     editor = createEditor();
     expect(editor.commands.setImageFloat('left')).toBe(true);
-    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '50%' });
+    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '100%' });
   });
 
-  it('uses the configured default width', () => {
-    editor = createEditor({}, '40%');
+  it.each(['30%', '50%', '320px'])('keeps the existing width %s', (displayWidth) => {
+    editor = createEditor({ displayWidth });
     editor.commands.setImageFloat('right');
-    expect(imageAttrs(editor)).toMatchObject({ align: 'float-right', displayWidth: '40%' });
-  });
-
-  it('keeps an existing narrower width', () => {
-    editor = createEditor({ displayWidth: '30%' });
-    editor.commands.setImageFloat('left');
-    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '30%' });
+    expect(imageAttrs(editor)).toMatchObject({ align: 'float-right', displayWidth });
   });
 
   it('unsetImageFloat returns to center and keeps the width', () => {
@@ -132,12 +109,6 @@ describe('commands', () => {
     editor = createEditor({ align: 'right', displayWidth: '50%' });
     expect(editor.commands.unsetImageFloat()).toBe(false);
     expect(imageAttrs(editor).align).toBe('right');
-  });
-
-  it.each(['', '100%', '  ', 'abc', '0%', '-5%', '150%', '0px'])('falls back to the built-in default for defaultWidth %j', (bad) => {
-    editor = createEditor({}, bad);
-    editor.commands.setImageFloat('left');
-    expect(imageAttrs(editor).displayWidth).toBe('50%');
   });
 
   it('does nothing when no image block is selected', () => {
@@ -161,11 +132,11 @@ describe('commands', () => {
   it('undo / redo revert a float change in one step', () => {
     editor = createEditor();
     editor.commands.toggleImageFloat('left');
-    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '50%' });
+    expect(imageAttrs(editor).align).toBe('float-left');
     editor.commands.undo();
-    expect(imageAttrs(editor)).toMatchObject({ align: 'center', displayWidth: '100%' });
+    expect(imageAttrs(editor).align).toBe('center');
     editor.commands.redo();
-    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '50%' });
+    expect(imageAttrs(editor).align).toBe('float-left');
   });
 
   it('round-trips float-left through HTML', () => {
@@ -173,10 +144,10 @@ describe('commands', () => {
     editor.commands.toggleImageFloat('left');
     const html = editor.getHTML();
     expect(html).toContain('data-align="float-left"');
-    expect(html).toContain('data-width="50%"');
+    expect(html).toContain('data-width="100%"');
     editor.commands.setContent(html);
     editor.commands.setNodeSelection(0);
-    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '50%' });
+    expect(imageAttrs(editor)).toMatchObject({ align: 'float-left', displayWidth: '100%' });
   });
 });
 

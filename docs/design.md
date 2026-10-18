@@ -63,7 +63,7 @@ flowchart TB
 | `Tiptap`（ファクトリ引数） | `{ core, react, suggestion, pm: { state, model, view, transform, commands, keymap, inputrules, … } }` | `core.Extension.create` だけを使う。 |
 | 拡張の `addOptions().blockMenu` | `BlockMenuButtonItem`: `{ scope, order, icon, tooltip, ariaLabel?, isActive?, isDisabled?, onSelect }`<br>`BlockMenuRenderItem`: `{ scope, order, render({editor, variant}) }` | ツールバーへのボタン追加。`scope: 'image'` は画像ブロック選択時、`'text'` はテキストブロック時に表示。コアの画像セクションは `order: -100`（`CORE_BLOCK_MENU_SECTION_ORDER`）なので、それより大きい値ならコアの後ろに並ぶ。 |
 | `ctx.i18n.addResources(lng, resources)` | 名前空間はプラグイン名で固定 | `t('block-editor-image-float:wrap.left')` のように参照。 |
-| `ctx.config` | `ACMS.Config[camelCase(プラグイン名)]` | PHP から渡す設定値（アセット URL・既定幅など）。6. 未確認事項参照。 |
+| `ctx.config` | `ACMS.Config[camelCase(プラグイン名)]` | PHP から渡す設定値。現在は使っていない（既定幅の自動変更をやめたため）。 |
 | `ctx.blockEditor.registerBlockDefinition` | スラッシュメニューや「ブロック追加」の項目 | **使わない**（回り込みはブロックの挿入ではないため）。 |
 
 ### 2.4 参考にした公式ドキュメント
@@ -166,7 +166,7 @@ acms-block-editor-image-float/                 ← GitHub: uidev1116/acms-block-
 ├── tests/
 │   ├── phpunit/Unit/Services/AssetRegistrarTest.php
 │   └── js/
-│       ├── extension.test.ts        # floatSideOf / needsDefaultWidth など
+│       ├── extension.test.ts        # floatSideOf / コマンド（本物の Tiptap Editor）など
 │       └── bundle-load.test.ts      # ビルド成果物の読み込みテスト（3.1）
 ├── .github/workflows/test.yml        # スケルトンの quality / phpunit に frontend ジョブを追加（3.6）
 ├── .github/workflows/release.yml     # スケルトンのまま（v* タグで zip を GitHub Release に公開）
@@ -396,7 +396,7 @@ class Hook
 - **F-1** 画像ブロックを選択するとツールバーに「左に回り込み」「右に回り込み」の 2 つのトグルボタンが出る（アイコン `format_image_left` / `format_image_right`）。
 - **F-2** 押すと画像が左（右）に寄り、後続の段落・見出し・リストが画像の反対側に回り込む。エディター上でも保存後の表示でも同じ見た目になる。
 - **F-3** 押下中のボタンをもう一度押すと解除され、既存の配置（中央）に戻る。既存の左・中央・右寄せを選ぶとフロートは解除される（排他）。
-- **F-4** 表示幅が 100%（または未設定）の画像にフロートを適用したときは、表示幅を既定値（50%、`ctx.config.defaultWidth` で変更可）にする。100% のままでは回り込む余地が無いため。
+- **F-4** ~~表示幅が 100% の画像にフロートを適用したとき、表示幅を既定値（50%）にする~~ → **やらない（実装で変更）**。幅は既存の画像ツールバー（表示幅の選択）で変える。フロートは `align` だけを変え、幅には触らない。幅 100% のままだと回り込む余地が無く見た目は変わらないので、幅を狭めてから使う。
 - **F-5** 狭い画面（公開側で 600px 未満など）ではフロートを解除し、通常の全幅表示にする。
 - **F-6** プラグインを無効化しても保存済み HTML は壊れない（回り込まず通常の画像として表示される）。
 
@@ -440,9 +440,8 @@ register(PLUGIN_NAME, {
   setup(ctx) {
     ctx.i18n.addResources('ja', resources.ja);
     ctx.i18n.addResources('en', resources.en);
-    const defaultWidth = typeof ctx.config.defaultWidth === 'string' ? ctx.config.defaultWidth : '50%';
     // Tiptap の値はファクトリの中でだけ使う（この時点ではまだ存在しない）
-    ctx.blockEditor.registerExtension('imageFloat', (tiptap) => createImageFloatExtension(tiptap, { defaultWidth }));
+    ctx.blockEditor.registerExtension('imageFloat', (tiptap) => createImageFloatExtension(tiptap));
   },
 });
 ```
@@ -461,8 +460,6 @@ const DEFAULT_ALIGN = 'center'; // コアの imageBlock.align の既定値
 /** 純粋関数（vitest 対象） */
 export const floatSideOf = (align: unknown): FloatSide | null =>
   align === FLOAT_ALIGN.left ? 'left' : align === FLOAT_ALIGN.right ? 'right' : null;
-export const needsDefaultWidth = (displayWidth: unknown): boolean =>
-  displayWidth == null || displayWidth === '' || displayWidth === '100%';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -474,9 +471,9 @@ declare module '@tiptap/core' {
   }
 }
 
-interface ImageFloatOptions { defaultWidth: string; blockMenu: BlockMenuToolbarItem[] }
+interface ImageFloatOptions { blockMenu: BlockMenuToolbarItem[] }
 
-export function createImageFloatExtension({ core }: Tiptap, { defaultWidth }: { defaultWidth: string }) {
+export function createImageFloatExtension({ core }: Tiptap) {
   return core.Extension.create<ImageFloatOptions>({
     name: 'imageFloat',
     addOptions() {
@@ -490,17 +487,12 @@ export function createImageFloatExtension({ core }: Tiptap, { defaultWidth }: { 
           editor.chain().focus(undefined, { scrollIntoView: false }).toggleImageFloat(side).run();
         },
       });
-      return { defaultWidth, blockMenu: [button('left', -90), button('right', -89)] };
+      return { blockMenu: [button('left', -90), button('right', -89)] };
     },
     addCommands() {
       return {
-        setImageFloat: (side) => ({ editor, commands }) => {
-          const { displayWidth } = editor.getAttributes('imageBlock');
-          return commands.updateAttributes('imageBlock', {
-            align: FLOAT_ALIGN[side],
-            ...(needsDefaultWidth(displayWidth) ? { displayWidth: this.options.defaultWidth } : {}),
-          });
-        },
+        // 幅は変えない（既存の画像ツールバーで変える）
+        setImageFloat: (side) => ({ commands }) => commands.updateAttributes('imageBlock', { align: FLOAT_ALIGN[side] }),
         unsetImageFloat: () => ({ commands }) => commands.updateAttributes('imageBlock', { align: DEFAULT_ALIGN }),
         toggleImageFloat: (side) => ({ editor, commands }) =>
           floatSideOf(editor.getAttributes('imageBlock').align) === side
@@ -568,13 +560,13 @@ export const resources = {
 - [ ] 左回り込みを押すと、エディター上で後続の段落が画像の右側に回り込む（右も同様）。
 - [ ] 押下状態（`isActive`）がボタンに反映され、もう一度押すと中央配置に戻る。
 - [ ] 回り込み中に既存の左・中央・右寄せを選ぶとフロートが解除される。逆も同様。
-- [ ] 表示幅 100% の画像に適用すると 50% になる。すでに 30% などの場合は変わらない。
+- [ ] 回り込みの適用・解除で表示幅は変わらない（100% のままなら見た目は変わらず、幅を狭めると回り込む）。
 - [ ] 保存 → 再読み込みで `data-align="float-left"` と幅が保持され、表示も同じ。
 - [ ] 保存 HTML の figure の `class`（カスタムクラス）に余計なクラスが混ざっていない。
 - [ ] 画像のキャプション・リンク・Lightbox・メディア差し替えが回り込み状態でも動く。
 - [ ] Undo / Redo で回り込みの適用・解除が 1 ステップで戻る。
 - [ ] プラグインを無効化しても、エディターでエラーが出ず通常の画像として表示される。
-- [ ] vitest：`floatSideOf`・`needsDefaultWidth` の単体テスト。
+- [ ] vitest：`floatSideOf` ほかの単体テストとコマンドのテスト（幅を変えないことを含む）。
 - [ ] バンドルに react / tiptap / prosemirror の実装が含まれていない。
 
 ## 5. 実装タスク
@@ -600,7 +592,7 @@ export const resources = {
 |---|---|---|
 | U-1 | `Hook::afterBuild()` での管理画面の判定（`ADMIN` 定数）が、ブロックエディターの出るすべての画面（管理画面のエントリー編集、公開側テーマ上のエントリー編集・ダイレクト編集、ユニットとしてのブロックエディター）で真になるか。公開側のページで読み込まれないか | 各画面でページのソースを見て `index.js` の有無を確認する。判定が合わなければ条件を調整する（例：`ADMIN` の値で絞る、ログインユーザーの権限で絞る）。 |
 | U-2 | `type="module"` のスクリプトで、`register()` の時点に `ACMS.plugins`・`ACMS.Library.React` が存在するか（アセット API のドキュメントでは実行順が保証されている） | コンソールで確認する。存在しない場合は `ACMS.Ready(() => register(…))` で登録する。 |
-| U-3 | `ctx.config` に値を渡す PHP 側の方法（`jsModule()` が配列を渡せるか、`ACMS.Config` のどこに入るか） | 渡せなければ既定値（`50%`）で動かす。設計はどちらでも動くようにしてある。 |
+| U-3 | `ctx.config` に値を渡す PHP 側の方法（`jsModule()` が配列を渡せるか、`ACMS.Config` のどこに入るか） | 不要になった（既定幅の自動変更をやめたため）。 |
 | U-4 | エディター内の NodeView の外側要素（`.react-renderer` など）に `display:flex` や `overflow` が付いていて回り込みを妨げないか。ドラッグハンドルや選択枠の位置がずれないか | DevTools で確認し、`style.css` で打ち消す。だめなら ProseMirror の `Decoration.node` で外側要素にクラスと幅を付けて外側ごと float させる。 |
 | U-5 | キャプション編集中（NodeSelection でないとき）に `updateAttributes('imageBlock')` が効くか | コアの `setImageBlockAlign` と同じ条件で試す。 |
 | U-6 | コアの AlignPicker が、未知の値（`float-left`）のときにエラーを出さず「未選択」表示になるか | 問題があれば、フロート中は AlignPicker を押したときに解除されることだけを保証し、表示の不整合は README に書く。 |
@@ -627,7 +619,7 @@ export const resources = {
 | Node のバージョン | 指定なし | `.node-version` / `volta` = 22.19.0 | Vite 8 は Node 20.19 以上が必要。バックエンド直下の volta は 20.16.0 のため、プラグイン側で固定した。 |
 | `index.ts` の起動条件 | `register()` を無条件に呼ぶ | `ACMS.plugins` があれば即 `register()`、無ければ `ACMS.adminReady` で待つ（どちらも無ければ何もしない） | 実機で、`admin.js`（async）より先にこの JS が実行されて `ACMS.plugins` が未生成のことがあり、登録されなかった／例外になった（U-1・U-2）。設計書 3.5 の「念のため JS 側でも」も兼ねる。 |
 | `unsetImageFloat` | 常に `align: 'center'` | フロート中のときだけ中央に戻す（それ以外は `false`） | 左・右寄せなど既存の配置を誤って中央に上書きしないため。 |
-| 既定幅の検証 | `typeof === 'string'` のみ | 空文字・`100%` は 50% に置き換える（`resolveDefaultWidth`） | `100%` を設定すると回り込む余地が無いまま適用されるため。 |
+| 表示幅の自動変更（F-4） | 幅 100% なら 50% にする（`defaultWidth`） | **やらない**。`align` だけ変え、幅は既存の画像ツールバーで変える | 幅を勝手に変えない方が素直で、幅の変更機能は既存にあるため（ユーザー指示）。`defaultWidth` の設定・検証も削除。 |
 | `Hook::afterBuild` | `Hook` に判定とパス組み立てを直書き | `Services\AssetRegistrar` に分離し、Asset ファサードの呼び出しをコンストラクターで差し替え可能に | 3.5 の方針どおり単体テストするため。`ADMIN` は文字列かつ空でないときに真とする。 |
 | 読み込み条件 | `ADMIN` が真のとき | `ADMIN` が真、または公開側でダイレクト編集が有効（`Entry::isDirectEditEnabled()`）のとき | 公開側テーマ上のダイレクト編集でもブロックエディターが出る（develop テーマが対応）ため。 |
 | エディター用 CSS | `.ProseMirror` 直下 | コアのエディターのルート `.acms-admin-block-editor` の内側に限定。独自に付けるクラス名は `acms-admin-` プレフィックス（現在は独自クラスなし） | 他の ProseMirror への副作用を避ける／命名規則。 |
@@ -644,7 +636,7 @@ export const resources = {
 |---|---|
 | U-1 | 管理画面のエントリー編集で `ADMIN` が真になり JS / CSS が出力される。公開側のページには出力されない。ただし `ACMS.plugins` が無い管理画面のページにも読み込まれるため、JS 側のガードが必要（上表）。公開側テーマ上のダイレクト編集（`Entry::isDirectEditEnabled()` が真のとき。`ADMIN` は空）は、コードの読解では JS が読み込まれないため、その場合も読み込むようにした（上表）。この環境ではダイレクト編集を有効にできず、実機では未確認。 |
 | U-2 | `ACMS.Library.React` は `register()` 時点で存在する。ただし `ACMS.plugins` は**常に先に存在するとは限らない**：コアの `admin.js` は `async` で読み込まれるため、`type="module"` のプラグイン JS の方が先に実行されることがあり、その場合は登録されない（再読み込みを繰り返すと再現）。ドキュメントの「実行順が保証される」は当てにしない。`ACMS.plugins` が無い場合は `ACMS.adminReady`（`admin.js` が `ACMS.plugins` を作った後に発火する管理画面版の `ACMS.Ready`）まで待ってから `register()` する実装にした（上表）。なお `ACMS.Ready` は `index.js`（公開側バンドル）が発火するため、`admin.js` より先に鳴り得て、この問題の解決にならない。 |
-| U-3 | `ctx.config` は空のオブジェクト（PHP から値を渡す仕組みは未実装）。既定値 50% で動作する。 |
+| U-3 | `ctx.config` は空のオブジェクト。PHP から値を渡す仕組みは未実装だが、現在 JS が使う設定は無い。 |
 | U-4 | 外側の NodeViewWrapper に回り込みを妨げる `flex` / `overflow` は無く、`style.css` のままで本文が回り込む。ドラッグハンドルは回り込み中の画像ブロックの左上に通常どおり出る。 |
 | U-5 | キャプションは入力欄（ツールバーのポップオーバー）で編集し、選択は NodeSelection のまま。回り込み中でも `align` は変わらない。 |
 | U-6 | コアの配置ボタンはエラーを出さないが、フロート中はアイコンが空になり `aria-label` が `配置: undefined` になる（コアの表示の不整合。操作は可能）。 |

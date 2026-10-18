@@ -4,7 +4,7 @@
 CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、既存の左・中央・右寄せとは別のトグルボタン（左に回り込み / 右に回り込み）として使えます。
 
 - 画像ブロックを選択するとツールバーに 2 つのボタンが出る。押すと画像が寄り、後続の本文が反対側に回り込む。もう一度押すと解除（中央に戻る）。
-- 表示幅が 100%（未設定）の画像に適用すると、表示幅を 50% にする（すでに 30% などの場合は変えない）。
+- 表示幅は変えません。幅 100% の画像は回り込む余地が無く見た目が変わらないので、既存の画像ツールバーで幅を狭めてから使います。
 - 保存形式は画像ブロックの `align` 属性（`float-left` / `float-right`）。プラグインを無効にしても保存済み HTML は壊れず、通常の画像として表示される。
 
 設計は [docs/design.md](docs/design.md)、実機確認のスクリーンショットは [docs/screenshots/](docs/screenshots/) にあります。
@@ -30,10 +30,6 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 保存される HTML は `<div class="media-image-block align-float-left" data-align="float-left" data-width="50%"><figure style="max-width: 50%;">…</figure></div>` です。
 公開側でも回り込ませるには、[public-css/image-float.css](public-css/image-float.css) の内容を**フロント側の本文 CSS に追加**してください（ヘッドレス配信の場合はフロントのリポジトリ。本プラグインは公開側に CSS を出力しません）。
 本文コンテナのセレクター（`.entry-body`）はフロント側に合わせて変更してください。600px 未満では回り込みを解除して全幅表示にします。
-
-## 設定
-
-`ctx.config.defaultWidth`（文字列。例 `'40%'`）で、回り込み適用時の既定の表示幅を変えられます。未設定なら `50%`（PHP から `ACMS.Config` に値を渡す方法は未実装のため、現状は既定値で動作します）。
 
 ## 開発
 

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as IndexModule from '../../frontend/index';
 
 const createImageFloatExtension = vi.fn(() => 'EXTENSION');
-vi.mock('../../frontend/extension', () => ({ createImageFloatExtension, FALLBACK_WIDTH: '50%' }));
+vi.mock('../../frontend/extension', () => ({ createImageFloatExtension }));
 vi.mock('../../frontend/style.css', () => ({}));
 
 type Setup = (ctx: unknown) => void;
@@ -78,7 +78,7 @@ describe('entry point', () => {
     expect(mod.PLUGIN_NAME).toBe('block-editor-image-float');
   });
 
-  it('setup adds i18n resources and registers the extension with the default width', async () => {
+  it('setup adds i18n resources and registers the extension factory', async () => {
     (window as unknown as { ACMS: unknown }).ACMS = { plugins: {} };
     await load();
     const ctx = makeCtx();
@@ -89,24 +89,6 @@ describe('entry point', () => {
     expect(name).toBe('imageFloat');
     const tiptap = {};
     expect(factory(tiptap)).toBe('EXTENSION');
-    expect(createImageFloatExtension).toHaveBeenCalledWith(tiptap, { defaultWidth: '50%' });
-  });
-
-  it('uses ctx.config.defaultWidth when it is a string', async () => {
-    (window as unknown as { ACMS: unknown }).ACMS = { plugins: {} };
-    await load();
-    const ctx = makeCtx({ defaultWidth: '40%' });
-    register.mock.calls[0][1].setup(ctx);
-    (ctx.blockEditor.registerExtension.mock.calls[0][1] as (t: unknown) => unknown)({});
-    expect(createImageFloatExtension).toHaveBeenCalledWith({}, { defaultWidth: '40%' });
-  });
-
-  it('ignores a non-string defaultWidth', async () => {
-    (window as unknown as { ACMS: unknown }).ACMS = { plugins: {} };
-    await load();
-    const ctx = makeCtx({ defaultWidth: 40 });
-    register.mock.calls[0][1].setup(ctx);
-    (ctx.blockEditor.registerExtension.mock.calls[0][1] as (t: unknown) => unknown)({});
-    expect(createImageFloatExtension).toHaveBeenCalledWith({}, { defaultWidth: '50%' });
+    expect(createImageFloatExtension).toHaveBeenCalledWith(tiptap);
   });
 });

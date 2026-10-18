@@ -1,5 +1,5 @@
 import { register } from '@ablogcms/plugins';
-import { createImageFloatExtension, FALLBACK_WIDTH } from './extension';
+import { createImageFloatExtension } from './extension';
 import { resources } from './i18n';
 import './style.css';
 
@@ -11,9 +11,8 @@ const registerPlugin = () =>
     setup(ctx) {
       ctx.i18n.addResources('ja', resources.ja);
       ctx.i18n.addResources('en', resources.en);
-      const defaultWidth = typeof ctx.config.defaultWidth === 'string' ? ctx.config.defaultWidth : FALLBACK_WIDTH;
       // Tiptap の値はファクトリの中でだけ使う（この時点ではまだ存在しない）
-      ctx.blockEditor.registerExtension('imageFloat', (tiptap) => createImageFloatExtension(tiptap, { defaultWidth }));
+      ctx.blockEditor.registerExtension('imageFloat', (tiptap) => createImageFloatExtension(tiptap));
     },
   });
 
