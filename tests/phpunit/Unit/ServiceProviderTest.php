@@ -59,15 +59,4 @@ final class ServiceProviderTest extends TestCase
 
         $this->assertInstanceOf(Hook::class, HookFactory::singleton()->getHook('BlockEditorImageFloatHook'));
     }
-
-    #[Test]
-    #[TestDox('renderSettingsScreen() renders the Twig settings template')]
-    public function renderSettingsScreenRendersTheTemplate(): void
-    {
-        (new ServiceProvider())->init();
-
-        $html = ServiceProvider::renderSettingsScreen();
-
-        $this->assertStringContainsString('block_editor_image_float_enabled', $html);
-    }
 }
