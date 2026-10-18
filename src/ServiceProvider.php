@@ -4,6 +4,8 @@ namespace Acms\Plugins\BlockEditorImageFloat;
 
 use ACMS_App;
 use Acms\Services\Common\HookFactory;
+use Acms\Services\Common\InjectTemplate;
+use Acms\Services\Facades\Twig;
 
 /**
  * Plugin (extension app) registration class.
@@ -35,7 +37,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var false|string
      */
-    public $menu = false;
+    public $menu = 'block_editor_image_float_index';
 
     /**
      * @var string
@@ -50,6 +52,24 @@ class ServiceProvider extends ACMS_App
     public function init()
     {
         HookFactory::singleton()->attach('BlockEditorImageFloatHook', new Hook());
+
+        // Settings screen (Twig). Shown under the plugin's "settings" link in the extension apps list.
+        Twig::addTemplatePath(PLUGIN_LIB_DIR . 'BlockEditorImageFloat/template', 'block_editor_image_float');
+        if (defined('ADMIN') && ADMIN === 'app_' . $this->menu) {
+            $inject = InjectTemplate::singleton();
+            $inject->add('admin-main', [self::class, 'renderSettingsScreen']);
+            $inject->add('admin-topicpath', PLUGIN_DIR . 'BlockEditorImageFloat/template/admin/topicpath.html');
+        }
+    }
+
+    /**
+     * Render the settings screen (called by InjectTemplate on the plugin settings page).
+     *
+     * @return string
+     */
+    public static function renderSettingsScreen(): string
+    {
+        return Twig::renderTemplate('@block_editor_image_float/admin/main.twig');
     }
 
     /**

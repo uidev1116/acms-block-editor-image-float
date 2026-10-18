@@ -62,6 +62,33 @@ final class AssetRegistrarTest extends TestCase
     }
 
     #[Test]
+    #[TestDox('shouldRegister() is false when the feature is switched off in the plugin settings')]
+    public function shouldRegisterRespectsTheSwitch(): void
+    {
+        $this->assertFalse(AssetRegistrar::shouldRegister('entry-edit', false, false));
+        $this->assertFalse(AssetRegistrar::shouldRegister('', true, false));
+        $this->assertTrue(AssetRegistrar::shouldRegister('entry-edit', false, true));
+    }
+
+    #[Test]
+    #[TestDox('register() does nothing when the feature is switched off')]
+    public function registerSkipsWhenDisabled(): void
+    {
+        $called = 0;
+        $registrar = new AssetRegistrar(
+            static function () use (&$called): void {
+                $called++;
+            },
+            static function () use (&$called): void {
+                $called++;
+            },
+        );
+
+        $this->assertFalse($registrar->register('entry-edit', '', false, false));
+        $this->assertSame(0, $called);
+    }
+
+    #[Test]
     #[TestDox('basePath() starts with / and DIR_OFFSET so the core treats it as a local file')]
     public function basePathStartsWithDirOffset(): void
     {

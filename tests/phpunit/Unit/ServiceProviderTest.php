@@ -21,7 +21,7 @@ final class ServiceProviderTest extends TestCase
 
         $this->assertSame('BlockEditorImageFloat', $provider->name);
         $this->assertSame('uidev1116', $provider->author);
-        $this->assertFalse($provider->menu);
+        $this->assertSame('block_editor_image_float_index', $provider->menu);
         $this->assertFalse($provider->module);
         $this->assertMatchesRegularExpression('/^\d+\.\d+\.\d+$/', $provider->version);
     }
@@ -47,5 +47,27 @@ final class ServiceProviderTest extends TestCase
         (new ServiceProvider())->init();
 
         $this->assertInstanceOf(Hook::class, HookFactory::singleton()->getHook('BlockEditorImageFloatHook'));
+    }
+
+    #[Test]
+    #[TestDox('init() injects the settings screen only on the plugin settings page')]
+    public function initInjectsSettingsScreenOnItsOwnPage(): void
+    {
+        define('ADMIN', 'app_block_editor_image_float_index');
+
+        (new ServiceProvider())->init();
+
+        $this->assertInstanceOf(Hook::class, HookFactory::singleton()->getHook('BlockEditorImageFloatHook'));
+    }
+
+    #[Test]
+    #[TestDox('renderSettingsScreen() renders the Twig settings template')]
+    public function renderSettingsScreenRendersTheTemplate(): void
+    {
+        (new ServiceProvider())->init();
+
+        $html = ServiceProvider::renderSettingsScreen();
+
+        $this->assertStringContainsString('block_editor_image_float_enabled', $html);
     }
 }

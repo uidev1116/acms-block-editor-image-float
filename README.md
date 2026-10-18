@@ -21,6 +21,10 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 
 管理画面（エントリー編集を含む）と、公開側でダイレクト編集が有効なときだけ JS / CSS を読み込みます（`Hook::afterBuild()`）。管理画面用の CSS はコアのエディターのルート（`.acms-admin-block-editor`）の内側に限定し、このプラグインが付けるクラス名は `acms-admin-` プレフィックスにします。
 
+## 設定画面（機能のオン / オフ）
+
+管理画面の「拡張アプリ」→ BlockEditorImageFloat の設定（`/admin/app_block_editor_image_float_index/`）で、「回り込みの配置を使う」をオフにして保存すると、そのブログではツールバーのボタンを出さず、JS / CSS も読み込みません（既定はオン）。保存済みの回り込みは通常の画像として表示されます。値はブログのコンフィグ（キー `block_editor_image_float_enabled`、`on` / `off`）に保存します。
+
 ## 公開側（フロントエンド）の CSS
 
 保存される HTML は `<div class="media-image-block align-float-left" data-align="float-left" data-width="50%"><figure style="max-width: 50%;">…</figure></div>` です。

@@ -44,10 +44,11 @@ final class AssetRegistrar
      *
      * @param mixed $admin The value of the core ADMIN constant (null when undefined)
      * @param bool $directEdit Whether direct edit is enabled on the current public page
+     * @param bool $enabled Whether the feature is switched on in the plugin settings
      */
-    public static function shouldRegister(mixed $admin, bool $directEdit = false): bool
+    public static function shouldRegister(mixed $admin, bool $directEdit = false, bool $enabled = true): bool
     {
-        return (is_string($admin) && $admin !== '') || $directEdit;
+        return $enabled && ((is_string($admin) && $admin !== '') || $directEdit);
     }
 
     /**
@@ -61,11 +62,12 @@ final class AssetRegistrar
     /**
      * @param mixed $admin The value of the core ADMIN constant (null when undefined)
      * @param bool $directEdit Whether direct edit is enabled on the current public page
+     * @param bool $enabled Whether the feature is switched on in the plugin settings
      * @return bool Whether assets were registered
      */
-    public function register(mixed $admin, string $dirOffset, bool $directEdit = false): bool
+    public function register(mixed $admin, string $dirOffset, bool $directEdit = false, bool $enabled = true): bool
     {
-        if (!self::shouldRegister($admin, $directEdit)) {
+        if (!self::shouldRegister($admin, $directEdit, $enabled)) {
             return false;
         }
         $base = self::basePath($dirOffset);
