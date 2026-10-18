@@ -1,9 +1,10 @@
-# Keep the GitHub Actions used by the workflows up to date. Patch and minor bumps are auto-merged
+# Keep the dependencies (GitHub Actions, npm, Composer) up to date. Patch and minor bumps are auto-merged
 # by .github/workflows/dependabot-auto-merge.yml once CI passes; major bumps are reviewed by hand.
 #
 # npm is tracked too: @ablogcms/* must match the installed a-blog cms core, so those packages are
 # ignored (bumped by hand together with the core; see README "コア更新時の確認事項").
-# Composer is not tracked: dev tools only, and ablogcms/testing-framework follows a-blog cms by hand.
+# Composer is tracked for the dev tools; ablogcms/testing-framework follows the a-blog cms minor by
+# hand (the CI matrix pins it per a-blog cms version), so it is ignored here.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -28,6 +29,19 @@ updates:
         update-types: ["version-update:semver-major"]
     groups:
       npm-dev:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "ablogcms/testing-framework"
+    groups:
+      composer-dev:
         patterns:
           - "*"
         update-types:

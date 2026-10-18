@@ -18,7 +18,7 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` を使�
 
 - a-blog cms **3.2.36 以上**（`ACMS.plugins` が必要）。`ServiceProvider::checkRequirements()` で確認し、古いとインストールできない（`Services\Requirements`）。
 - PHP 8.1〜8.5（CI でテスト）。PHP 8.6 以降は未テスト。
-- 開発時の Node は 22.19.0（`.node-version`。Vite 8 は Node 20.19 以上が必要）。
+- 開発時の Node は 24.22.0（`.node-version`。Vite 8 は Node 20.19 以上が必要）。
 
 ## 3. 機能仕様
 
