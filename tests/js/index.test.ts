@@ -26,39 +26,48 @@ describe('entry point', () => {
     createImageFloatExtension.mockClear();
   });
   afterEach(() => {
-    vi.useRealTimers();
     delete (window as unknown as { ACMS?: unknown }).ACMS;
   });
 
-  it('does nothing, and stops waiting, when ACMS.plugins never appears (public pages)', async () => {
-    vi.useFakeTimers();
+  it('does nothing when ACMS is missing (public pages)', async () => {
     await load();
-    await vi.advanceTimersByTimeAsync(60_000);
     expect(register).not.toHaveBeenCalled();
-    expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('waits for ACMS.plugins when admin.js runs after this script (async race)', async () => {
-    vi.useFakeTimers();
-    await load();
-    await vi.advanceTimersByTimeAsync(100);
-    expect(register).not.toHaveBeenCalled();
-    (window as unknown as { ACMS: unknown }).ACMS = { plugins: {} };
-    await vi.advanceTimersByTimeAsync(20);
-    expect(register).toHaveBeenCalledTimes(1);
-    await vi.advanceTimersByTimeAsync(60_000);
-    expect(register).toHaveBeenCalledTimes(1);
-    expect(vi.getTimerCount()).toBe(0);
-  });
-
-  it('waits when window.ACMS exists but plugins is not created yet', async () => {
-    vi.useFakeTimers();
+  it('does nothing when ACMS has no adminReady (and no plugins)', async () => {
     (window as unknown as { ACMS: unknown }).ACMS = {};
     await load();
     expect(register).not.toHaveBeenCalled();
-    (window as unknown as { ACMS: { plugins: unknown } }).ACMS.plugins = {};
-    await vi.advanceTimersByTimeAsync(20);
+  });
+
+  it('waits for ACMS.adminReady when admin.js runs after this script (async race)', async () => {
+    const listeners: Array<() => void> = [];
+    const acms: { plugins?: unknown; adminReady: (l: () => void) => void } = {
+      adminReady: (l) => listeners.push(l),
+    };
+    (window as unknown as { ACMS: unknown }).ACMS = acms;
+    await load();
+    expect(register).not.toHaveBeenCalled();
+    expect(listeners).toHaveLength(1);
+    acms.plugins = {};
+    listeners[0]();
     expect(register).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores adminReady when plugins still does not exist', async () => {
+    const listeners: Array<() => void> = [];
+    (window as unknown as { ACMS: unknown }).ACMS = { adminReady: (l: () => void) => listeners.push(l) };
+    await load();
+    listeners[0]();
+    expect(register).not.toHaveBeenCalled();
+  });
+
+  it('registers immediately, without adminReady, when plugins already exists', async () => {
+    const adminReady = vi.fn();
+    (window as unknown as { ACMS: unknown }).ACMS = { plugins: {}, adminReady };
+    await load();
+    expect(register).toHaveBeenCalledTimes(1);
+    expect(adminReady).not.toHaveBeenCalled();
   });
 
   it('registers the plugin when ACMS.plugins exists', async () => {

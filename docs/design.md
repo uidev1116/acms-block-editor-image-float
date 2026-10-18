@@ -625,7 +625,7 @@ export const resources = {
 | 項目 | 設計書 | 実装 | 理由 |
 |---|---|---|---|
 | Node のバージョン | 指定なし | `.node-version` / `volta` = 22.19.0 | Vite 8 は Node 20.19 以上が必要。バックエンド直下の volta は 20.16.0 のため、プラグイン側で固定した。 |
-| `index.ts` の起動条件 | `register()` を無条件に呼ぶ | `ACMS.plugins` が現れるまで待ち（10ms 間隔・最大 10 秒）、あれば `register()`、タイムアウトしたら何もしない | 実機で、`admin.js`（async）より先にこの JS が実行されて `ACMS.plugins` が未生成のことがあり、登録されなかった／例外になった（U-1・U-2）。設計書 3.5 の「念のため JS 側でも」も兼ねる。 |
+| `index.ts` の起動条件 | `register()` を無条件に呼ぶ | `ACMS.plugins` があれば即 `register()`、無ければ `ACMS.adminReady` で待つ（どちらも無ければ何もしない） | 実機で、`admin.js`（async）より先にこの JS が実行されて `ACMS.plugins` が未生成のことがあり、登録されなかった／例外になった（U-1・U-2）。設計書 3.5 の「念のため JS 側でも」も兼ねる。 |
 | `unsetImageFloat` | 常に `align: 'center'` | フロート中のときだけ中央に戻す（それ以外は `false`） | 左・右寄せなど既存の配置を誤って中央に上書きしないため。 |
 | 既定幅の検証 | `typeof === 'string'` のみ | 空文字・`100%` は 50% に置き換える（`resolveDefaultWidth`） | `100%` を設定すると回り込む余地が無いまま適用されるため。 |
 | `Hook::afterBuild` | `Hook` に判定とパス組み立てを直書き | `Services\AssetRegistrar` に分離し、Asset ファサードの呼び出しをコンストラクターで差し替え可能に | 3.5 の方針どおり単体テストするため。`ADMIN` は文字列かつ空でないときに真とする。 |
@@ -639,7 +639,7 @@ export const resources = {
 | # | 結果 |
 |---|---|
 | U-1 | 管理画面のエントリー編集で `ADMIN` が真になり JS / CSS が出力される。公開側のページには出力されない。ただし `ACMS.plugins` が無い管理画面のページにも読み込まれるため、JS 側のガードが必要（上表）。公開側テーマ上のダイレクト編集は未確認。 |
-| U-2 | `ACMS.Library.React` は `register()` 時点で存在する。ただし `ACMS.plugins` は**常に先に存在するとは限らない**：コアの `admin.js` は `async` で読み込まれるため、`type="module"` のプラグイン JS の方が先に実行されることがあり、その場合は登録されない（再読み込みを繰り返すと再現）。ドキュメントの「実行順が保証される」は当てにしない。`ACMS.plugins` が現れるまで 10ms 間隔で最大 10 秒待ってから `register()` する実装にした（上表）。 |
+| U-2 | `ACMS.Library.React` は `register()` 時点で存在する。ただし `ACMS.plugins` は**常に先に存在するとは限らない**：コアの `admin.js` は `async` で読み込まれるため、`type="module"` のプラグイン JS の方が先に実行されることがあり、その場合は登録されない（再読み込みを繰り返すと再現）。ドキュメントの「実行順が保証される」は当てにしない。`ACMS.plugins` が無い場合は `ACMS.adminReady`（`admin.js` が `ACMS.plugins` を作った後に発火する管理画面版の `ACMS.Ready`）まで待ってから `register()` する実装にした（上表）。なお `ACMS.Ready` は `index.js`（公開側バンドル）が発火するため、`admin.js` より先に鳴り得て、この問題の解決にならない。 |
 | U-3 | `ctx.config` は空のオブジェクト（PHP から値を渡す仕組みは未実装）。既定値 50% で動作する。 |
 | U-4 | 外側の NodeViewWrapper に回り込みを妨げる `flex` / `overflow` は無く、`style.css` のままで本文が回り込む。ドラッグハンドルの位置は未確認。 |
 | U-5 | キャプションは入力欄（ツールバーのポップオーバー）で編集し、選択は NodeSelection のまま。回り込み中でも `align` は変わらない。 |
