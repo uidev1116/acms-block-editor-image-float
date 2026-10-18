@@ -40,7 +40,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version-file: .node-version
+          node-version-file: package.json
           cache: npm
 
       # src/assets (built JS / CSS) is not committed; build it so it is bundled into the zip.
