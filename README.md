@@ -71,32 +71,34 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 
 本プラグインは公開側に CSS を出力しません。ヘッドレス配信のフロントエンドなど、公開側でも回り込ませるには、次の CSS を**フロント側の本文 CSS に追加**してください。
 
+画像ブロックへのスタイルは、本文の基準となるクラス `.acms-entry` の内側に限定し、`[data-type='imageBlock']` に当てています。
+
 ```css
-.entry-body {
-  display: flow-root; /* 回り込みがコンテナの外にはみ出さないようにする */
+.acms-entry {
+  display: flow-root; /* 回り込みが本文コンテナの外にはみ出さないようにする */
 }
 
-[data-type='imageBlock'][data-align^='float-'] > figure {
+.acms-entry [data-type='imageBlock'][data-align^='float-'] > figure {
   margin-block: 0.25em 1em;
 }
 
-[data-type='imageBlock'][data-align^='float-'] img {
+.acms-entry [data-type='imageBlock'][data-align^='float-'] img {
   max-width: 100%;
   height: auto;
 }
 
-[data-type='imageBlock'][data-align='float-left'] > figure {
+.acms-entry [data-type='imageBlock'][data-align='float-left'] > figure {
   float: left;
   margin-inline: 0 1.5em;
 }
 
-[data-type='imageBlock'][data-align='float-right'] > figure {
+.acms-entry [data-type='imageBlock'][data-align='float-right'] > figure {
   float: right;
   margin-inline: 1.5em 0;
 }
 
 @media (max-width: 599px) {
-  [data-type='imageBlock'][data-align^='float-'] > figure {
+  .acms-entry [data-type='imageBlock'][data-align^='float-'] > figure {
     float: none;
     max-width: 100% !important; /* figure のインライン max-width を打ち消す */
     margin-inline: 0;
@@ -104,7 +106,7 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 }
 ```
 
-- 本文コンテナのセレクター（`.entry-body`）は、フロント側のクラス名に合わせて変更してください
+- `.acms-entry` は本文の基準となるクラスです。**どのクラスが本文の基準になるかは、テーマ（フロント）によって異なる**ので、自分のテーマの本文コンテナのクラス名に読み替えてください
 - 600px 未満では回り込みを解除して全幅表示にします
 - 幅（`max-width`）は `<figure>` のインラインスタイルのため、狭い画面で全幅に戻すには `!important` が必要です
 

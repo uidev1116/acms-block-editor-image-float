@@ -132,7 +132,7 @@ Vite 8 のライブラリモード、出力は IIFE（`src/assets/index.js` と 
 
 - エディター用（`frontend/style.css`）：コアのエディターのルート `.acms-admin-block-editor` の内側に限定する。画像ブロックには `.media-image-block` のクラスではなく `[data-type="imageBlock"]` で当てる。**外側のラッパーではなく、内側の `<figure>` を `float` させる**（外側を float させると幅が shrink-to-fit になり、`figure` のインライン `max-width`（%）が効かなくなる）。`.ProseMirror` に `display: flow-root` を付け、float が下にはみ出さないようにする。
 - このプラグインが独自に付ける管理画面のクラス名は `acms-admin-` プレフィックスにする（現在は独自クラスなし）。
-- 公開側用の CSS はプラグインに同梱せず、README に掲載する（フロントエンドの責務）。
+- 公開側用の CSS はプラグインに同梱せず、README に掲載する（フロントエンドの責務）。本文の基準となるクラス `.acms-entry` の内側に限定し、画像ブロックには `[data-type="imageBlock"]` で当てる。本文の基準クラスはテーマによって異なるため、README に「テーマに合わせて読み替える」と明記する。
 
 ## 7. 受け入れ条件
 
