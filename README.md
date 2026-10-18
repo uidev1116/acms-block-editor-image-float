@@ -25,7 +25,7 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` で本�
 
 ## ダウンロード
 
-[BlockEditorImageFloat](https://github.com/uidev1116/acms-block-editor-image-float/releases/latest)
+[BlockEditorImageFloat.zip（最新版）](https://github.com/uidev1116/acms-block-editor-image-float/releases/latest/download/BlockEditorImageFloat.zip)
 
 ## インストール方法
 
