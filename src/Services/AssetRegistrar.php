@@ -39,13 +39,15 @@ final class AssetRegistrar
     }
 
     /**
-     * The block editor only exists on admin screens, so nothing is loaded elsewhere.
+     * The block editor only exists on admin screens and, on public pages, in direct edit mode,
+     * so nothing is loaded elsewhere.
      *
      * @param mixed $admin The value of the core ADMIN constant (null when undefined)
+     * @param bool $directEdit Whether direct edit is enabled on the current public page
      */
-    public static function shouldRegister(mixed $admin): bool
+    public static function shouldRegister(mixed $admin, bool $directEdit = false): bool
     {
-        return is_string($admin) && $admin !== '';
+        return (is_string($admin) && $admin !== '') || $directEdit;
     }
 
     /**
@@ -58,11 +60,12 @@ final class AssetRegistrar
 
     /**
      * @param mixed $admin The value of the core ADMIN constant (null when undefined)
+     * @param bool $directEdit Whether direct edit is enabled on the current public page
      * @return bool Whether assets were registered
      */
-    public function register(mixed $admin, string $dirOffset): bool
+    public function register(mixed $admin, string $dirOffset, bool $directEdit = false): bool
     {
-        if (!self::shouldRegister($admin)) {
+        if (!self::shouldRegister($admin, $directEdit)) {
             return false;
         }
         $base = self::basePath($dirOffset);

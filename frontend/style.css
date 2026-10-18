@@ -1,25 +1,28 @@
+/* 管理画面側のセレクターは、コアのエディターのルート（.acms-admin-block-editor）の内側に限定する。
+   このプラグインが独自に付けるクラス名は acms-admin- プレフィックスにする（現在は独自クラスなし） */
+
 /* エディター本体：float が下にはみ出さないよう BFC を作る */
-.ProseMirror {
+.acms-admin-block-editor .ProseMirror {
   display: flow-root;
 }
 
 /* 内側の <figure> を float させる（外側の NodeViewWrapper はブロック要素のまま） */
-.ProseMirror .media-image-block[data-align^='float-'] > figure {
+.acms-admin-block-editor .ProseMirror .media-image-block[data-align^='float-'] > figure {
   margin-block: 0.25em 1em;
   width: 100%;
 }
 
-.ProseMirror .media-image-block[data-align^='float-'] img {
+.acms-admin-block-editor .ProseMirror .media-image-block[data-align^='float-'] img {
   max-width: 100%;
   height: auto;
 }
 
-.ProseMirror .media-image-block[data-align='float-left'] > figure {
+.acms-admin-block-editor .ProseMirror .media-image-block[data-align='float-left'] > figure {
   float: left;
   margin-inline: 0 1.5em;
 }
 
-.ProseMirror .media-image-block[data-align='float-right'] > figure {
+.acms-admin-block-editor .ProseMirror .media-image-block[data-align='float-right'] > figure {
   float: right;
   margin-inline: 1.5em 0;
 }

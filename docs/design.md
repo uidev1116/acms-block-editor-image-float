@@ -629,6 +629,8 @@ export const resources = {
 | `unsetImageFloat` | 常に `align: 'center'` | フロート中のときだけ中央に戻す（それ以外は `false`） | 左・右寄せなど既存の配置を誤って中央に上書きしないため。 |
 | 既定幅の検証 | `typeof === 'string'` のみ | 空文字・`100%` は 50% に置き換える（`resolveDefaultWidth`） | `100%` を設定すると回り込む余地が無いまま適用されるため。 |
 | `Hook::afterBuild` | `Hook` に判定とパス組み立てを直書き | `Services\AssetRegistrar` に分離し、Asset ファサードの呼び出しをコンストラクターで差し替え可能に | 3.5 の方針どおり単体テストするため。`ADMIN` は文字列かつ空でないときに真とする。 |
+| 読み込み条件 | `ADMIN` が真のとき | `ADMIN` が真、または公開側でダイレクト編集が有効（`Entry::isDirectEditEnabled()`）のとき | 公開側テーマ上のダイレクト編集でもブロックエディターが出る（develop テーマが対応）ため。 |
+| エディター用 CSS | `.ProseMirror` 直下 | コアのエディターのルート `.acms-admin-block-editor` の内側に限定。独自に付けるクラス名は `acms-admin-` プレフィックス（現在は独自クラスなし） | 他の ProseMirror への副作用を避ける／命名規則。 |
 | PHPUnit | Unit と Integration の 2 スイート | Unit のみ（Integration ディレクトリは削除） | サンプルのテストを削除したため。 |
 | カバレッジ | 指定なし | vitest は 90% しきい値（`npm run test:coverage`）、PHP は `composer coverage`（pcov。`phpunit.coverage.xml.dist`） | TDD とカバレッジ 90% 以上の方針。コアの autoload は `extension/plugins/` 側のパスを使うため、PHP のカバレッジはそのパスを対象にした別設定が必要。 |
 | CI | `frontend` ジョブは typecheck / test / build / diff | `npm run test:coverage` に置き換え、`quality` ジョブで PHP のカバレッジも実行 | 同上。 |
@@ -639,7 +641,7 @@ export const resources = {
 
 | # | 結果 |
 |---|---|
-| U-1 | 管理画面のエントリー編集で `ADMIN` が真になり JS / CSS が出力される。公開側のページには出力されない。ただし `ACMS.plugins` が無い管理画面のページにも読み込まれるため、JS 側のガードが必要（上表）。公開側テーマ上のダイレクト編集は未確認。 |
+| U-1 | 管理画面のエントリー編集で `ADMIN` が真になり JS / CSS が出力される。公開側のページには出力されない。ただし `ACMS.plugins` が無い管理画面のページにも読み込まれるため、JS 側のガードが必要（上表）。公開側テーマ上のダイレクト編集（`Entry::isDirectEditEnabled()` が真のとき。`ADMIN` は空）は、コードの読解では JS が読み込まれないため、その場合も読み込むようにした（上表）。この環境ではダイレクト編集を有効にできず、実機では未確認。 |
 | U-2 | `ACMS.Library.React` は `register()` 時点で存在する。ただし `ACMS.plugins` は**常に先に存在するとは限らない**：コアの `admin.js` は `async` で読み込まれるため、`type="module"` のプラグイン JS の方が先に実行されることがあり、その場合は登録されない（再読み込みを繰り返すと再現）。ドキュメントの「実行順が保証される」は当てにしない。`ACMS.plugins` が無い場合は `ACMS.adminReady`（`admin.js` が `ACMS.plugins` を作った後に発火する管理画面版の `ACMS.Ready`）まで待ってから `register()` する実装にした（上表）。なお `ACMS.Ready` は `index.js`（公開側バンドル）が発火するため、`admin.js` より先に鳴り得て、この問題の解決にならない。 |
 | U-3 | `ctx.config` は空のオブジェクト（PHP から値を渡す仕組みは未実装）。既定値 50% で動作する。 |
 | U-4 | 外側の NodeViewWrapper に回り込みを妨げる `flex` / `overflow` は無く、`style.css` のままで本文が回り込む。ドラッグハンドルの位置は未確認。 |

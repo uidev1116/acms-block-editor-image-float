@@ -19,7 +19,7 @@ CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ操作で、�
 1. このリポジトリの `src/` を `ablogcms/extension/plugins/BlockEditorImageFloat/` として配置する（リリースの zip を展開してもよい。バックエンドのリポジトリでは submodule + `npm run setup` がシンボリックリンクを作る）。
 2. 管理画面の「拡張アプリ」で **BlockEditorImageFloat** をインストールする（インストールすると有効化される）。
 
-管理画面（エントリー編集を含む）でだけ JS / CSS を読み込みます（`Hook::afterBuild()`）。
+管理画面（エントリー編集を含む）と、公開側でダイレクト編集が有効なときだけ JS / CSS を読み込みます（`Hook::afterBuild()`）。管理画面用の CSS はコアのエディターのルート（`.acms-admin-block-editor`）の内側に限定し、このプラグインが付けるクラス名は `acms-admin-` プレフィックスにします。
 
 ## 公開側（フロントエンド）の CSS
 

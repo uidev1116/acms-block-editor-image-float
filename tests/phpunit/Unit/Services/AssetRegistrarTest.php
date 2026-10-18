@@ -35,6 +35,33 @@ final class AssetRegistrarTest extends TestCase
     }
 
     #[Test]
+    #[TestDox('shouldRegister() is also true on public pages while direct edit is enabled')]
+    public function shouldRegisterOnDirectEdit(): void
+    {
+        $this->assertTrue(AssetRegistrar::shouldRegister('', true));
+        $this->assertTrue(AssetRegistrar::shouldRegister(null, true));
+        $this->assertFalse(AssetRegistrar::shouldRegister('', false));
+    }
+
+    #[Test]
+    #[TestDox('register() registers the assets on public pages while direct edit is enabled')]
+    public function registerOnDirectEdit(): void
+    {
+        $calls = 0;
+        $registrar = new AssetRegistrar(
+            static function () use (&$calls): void {
+                $calls++;
+            },
+            static function () use (&$calls): void {
+                $calls++;
+            },
+        );
+
+        $this->assertTrue($registrar->register('', '', true));
+        $this->assertSame(2, $calls);
+    }
+
+    #[Test]
     #[TestDox('basePath() starts with / and DIR_OFFSET so the core treats it as a local file')]
     public function basePathStartsWithDirOffset(): void
     {
