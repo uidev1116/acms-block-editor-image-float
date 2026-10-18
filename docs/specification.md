@@ -4,7 +4,9 @@ a-blog cms のブロックエディターの画像ブロックに、テキスト
 
 ## 1. 概要
 
-CKEditor 5 の「Wrap text: Left / Right aligned image」と同じ**回り込み配置**を、画像ブロックに追加する。既存の「左・中央・右寄せ」（回り込まずに段落を分ける配置）とは別のボタンにする。
+CKEditor 5 の画像スタイル「Images wrapped with text」（`float` を使う `alignLeft` / `alignRight`）と同じ**回り込み配置**を、画像ブロックに追加する。既存の「左・中央・右寄せ」（`float` を使わず段落の間に置く配置。CKEditor 5 の「Images placed between the paragraphs」に相当）とは別のボタンにする。
+
+回り込みと既存の寄せは、同じ `align` 属性の別の値なので排他的（同時には使えない）。CKEditor 5 も、画像スタイルは同時に 1 つしか適用できない（公式ドキュメント「Image styles」：複数のスタイル（クラス）を同時に適用することはできない）。
 
 原則：
 
