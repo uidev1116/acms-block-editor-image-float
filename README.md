@@ -193,10 +193,15 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` で本�
 npm ci
 npm run dev            # vite build --watch（src/assets に出力）
 npm run typecheck
+npm run lint            # ESLint（typescript-eslint + eslint-config-prettier）
+npm run format:check   # Prettier（整形は npm run format）
+npm run check          # lint + format:check + typecheck + test をまとめて実行
 npm test               # vitest
 npm run test:coverage  # カバレッジ 90% 以上を要求
 npm run build          # src/assets をビルド（コミットしない。.gitignore 済み）
 ```
+
+`npm ci` で Husky が有効になり、コミット時に lint-staged（変更した `.ts` / `.css` / `.json` へ ESLint と Prettier）が自動で走ります。
 
 PHP は Docker（`docker compose up -d`。ポートは `.env` の `ACMS_PORT`）で実行します。
 
