@@ -2,12 +2,7 @@ import * as core from '@tiptap/core';
 import { UndoRedo } from '@tiptap/extensions';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Tiptap } from '@ablogcms/block-editor/tiptap';
-import {
-  createImageFloatExtension,
-  FLOAT_ALIGN,
-  floatSideOf,
-  isFloatAlign,
-} from '../../frontend/extension';
+import { createImageFloatExtension, FLOAT_ALIGN, floatSideOf, isFloatAlign } from '../../frontend/extension';
 
 vi.mock('@ablogcms/i18n', () => ({ t: (key: string) => `t(${key})` }));
 
@@ -172,8 +167,16 @@ describe('block menu', () => {
 
   it('declares two image-scope buttons after the core section', () => {
     const [left, right] = items();
-    expect(left).toMatchObject({ scope: 'image', icon: 'format_image_left', tooltip: 't(block-editor-image-float:wrap.left)' });
-    expect(right).toMatchObject({ scope: 'image', icon: 'format_image_right', tooltip: 't(block-editor-image-float:wrap.right)' });
+    expect(left).toMatchObject({
+      scope: 'image',
+      icon: 'format_image_left',
+      tooltip: 't(block-editor-image-float:wrap.left)',
+    });
+    expect(right).toMatchObject({
+      scope: 'image',
+      icon: 'format_image_right',
+      tooltip: 't(block-editor-image-float:wrap.right)',
+    });
     expect(left.order).toBeGreaterThan(-100);
     expect(right.order).toBeGreaterThan(left.order);
   });

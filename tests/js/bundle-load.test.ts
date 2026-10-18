@@ -21,7 +21,6 @@ type Win = { ACMS?: unknown };
 
 const run = (acms: unknown) => {
   (window as unknown as Win).ACMS = acms;
-  // eslint-disable-next-line no-new-func
   new Function(code)();
 };
 
@@ -43,7 +42,14 @@ describe('built bundle', () => {
     const registered: Array<{ name: string; def: { setup: (ctx: unknown) => void } }> = [];
     const factories: Record<string, Factory> = {};
     // ファクトリ実行前に Tiptap へ触ると例外になる、ホストの遅延 Proxy を再現する
-    const lazyTiptap = new Proxy({}, { get() { throw new Error('tiptap accessed before the factory ran'); } });
+    const lazyTiptap = new Proxy(
+      {},
+      {
+        get() {
+          throw new Error('tiptap accessed before the factory ran');
+        },
+      }
+    );
     run({
       Library: { tiptap: lazyTiptap },
       plugins: { register: (name: string, def: { setup: (ctx: unknown) => void }) => registered.push({ name, def }) },
