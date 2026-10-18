@@ -1,6 +1,12 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
 
 # Boots a-blog cms + MySQL with the bundled docker-compose.yml and runs the checks inside the
 # container (the appleple/acms all-in-one image). The image tag encodes both versions as

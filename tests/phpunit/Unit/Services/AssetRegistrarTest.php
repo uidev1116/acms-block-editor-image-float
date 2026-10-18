@@ -153,4 +153,62 @@ final class AssetRegistrarTest extends TestCase
     {
         $this->assertTrue((new AssetRegistrar())->register('entry-edit', ''));
     }
+
+    #[Test]
+    #[TestDox('register() evaluates the direct edit and settings checks only when needed')]
+    public function registerEvaluatesChecksLazily(): void
+    {
+        $directEditCalls = 0;
+        $enabledCalls = 0;
+        $directEdit = static function () use (&$directEditCalls): bool {
+            $directEditCalls++;
+            return false;
+        };
+        $enabled = static function () use (&$enabledCalls): bool {
+            $enabledCalls++;
+            return true;
+        };
+        $registrar = new AssetRegistrar(static function (): void {
+        }, static function (): void {
+        });
+
+        // public page, direct edit off: the settings must not be read at all
+        $this->assertFalse($registrar->register(null, '', $directEdit, $enabled));
+        $this->assertSame(1, $directEditCalls);
+        $this->assertSame(0, $enabledCalls);
+
+        // admin screen: direct edit need not be asked
+        $this->assertTrue($registrar->register('entry-edit', '', $directEdit, $enabled));
+        $this->assertSame(1, $directEditCalls);
+        $this->assertSame(1, $enabledCalls);
+    }
+
+    #[Test]
+    #[TestDox('register() does nothing when the built assets are missing')]
+    public function registerSkipsWhenAssetsAreMissing(): void
+    {
+        $dir = sys_get_temp_dir() . '/image-float-assets-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        $called = 0;
+        $count = static function () use (&$called): void {
+            $called++;
+        };
+        $registrar = new AssetRegistrar($count, $count);
+
+        try {
+            $this->assertFalse($registrar->register('entry-edit', '', false, true, $dir));
+            file_put_contents($dir . '/index.js', 'x');
+            $this->assertFalse($registrar->register('entry-edit', '', false, true, $dir), 'index.css is still missing');
+            $this->assertSame(0, $called);
+
+            file_put_contents($dir . '/index.css', 'x');
+            $this->assertTrue($registrar->register('entry-edit', '', false, true, $dir));
+            $this->assertSame(2, $called);
+        } finally {
+            foreach (['index.js', 'index.css'] as $file) {
+                @unlink($dir . '/' . $file);
+            }
+            rmdir($dir);
+        }
+    }
 }

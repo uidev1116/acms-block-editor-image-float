@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 const TIPTAP_PM = [
   'state',
@@ -28,6 +31,7 @@ const globals: Record<string, string> = {
 };
 
 export default defineConfig(({ mode }) => ({
+  define: { __PLUGIN_VERSION__: JSON.stringify(version) },
   publicDir: false,
   build: {
     outDir: 'src/assets',

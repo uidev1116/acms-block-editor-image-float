@@ -81,6 +81,7 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` で本�
 }
 
 .acms-entry [data-type='imageBlock'][data-align^='float-'] > figure {
+  width: 100%; /* 表示幅は figure のインライン max-width で決まる（エディターと同じ見た目にする） */
   margin-block: 0.25em 1em;
 }
 
@@ -206,7 +207,7 @@ docker compose exec acms bash -lc "cd /workspace && ACMS_ROOT=/var/www/html vend
 
 ### ビルド成果物とリリース
 
-`src/assets/`（ビルド済みの JS / CSS）は Git に含めません。`v*` タグを push すると `release.yml` がビルドし、配布用の zip にだけ含めます。ソースから使う場合（バックエンドの submodule など）は `npm ci && npm run build`（`npm run setup` も同じ）でビルドしてください。
+`src/assets/`（ビルド済みの JS / CSS）は Git に含めません。`v*` タグ（master 上のコミットのみ）を push すると `release.yml` が型チェック・テスト・ビルドを行い、配布用の zip にだけ含めます。ビルド成果物が無い（または開発ビルドの `.map` が残っている）と `scripts/package.php` は失敗し、実行時も `assets/index.js` と `index.css` が無ければ JS / CSS を読み込みません。ソースから使う場合（バックエンドの submodule など）は `npm ci && npm run build`（`npm run setup` も同じ）でビルドしてください。
 
 ### コア（a-blog cms / @ablogcms/*）更新時の確認事項
 
@@ -215,6 +216,11 @@ docker compose exec acms bash -lc "cd /workspace && ACMS_ROOT=/var/www/html vend
 - `@ablogcms/*`（`package.json`）をコアと同じ版に上げ、`npm run build` で再ビルドする
 - 保存 → 再読み込みで `data-align="float-left"` と幅が保持されること（コアが `align` の値を `left|center|right` に制限していないか）
 - ツールバー（`blockMenu` の `scope: 'image'`）にボタンが出ること
+- `npm test` が通ること（`tests/js/core-contract.test.ts` が、インストール済みの `@ablogcms/block-editor` の画像ブロックの形（`align` 属性、`data-align`、`data-type="imageBlock"` と直下の `<figure>`、`scope: 'image'` の順序など）を検査します。落ちたら CSS・拡張の追従が必要です）
+
+### バージョン
+
+プラグインのバージョンは `src/ServiceProvider.php` の `$version` と `package.json` の `version` を同じ値にします（JS の `register()` には `package.json` の値が渡されます）。`tests/js/version.test.ts` が CI で一致を検査し、`release.yml` もタグとの一致を確認します。
 
 ## ライセンス
 

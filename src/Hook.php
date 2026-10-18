@@ -25,8 +25,9 @@ class Hook
         (new AssetRegistrar())->register(
             defined('ADMIN') ? ADMIN : null,
             defined('DIR_OFFSET') ? DIR_OFFSET : '',
-            Entry::isDirectEditEnabled(),
-            Settings::isEnabledForBlog(defined('BID') ? BID : 1),
+            static fn(): bool => Entry::isDirectEditEnabled(),
+            static fn(): bool => Settings::isEnabledForBlog(defined('BID') ? BID : 1),
+            __DIR__ . '/assets',
         );
     }
 }

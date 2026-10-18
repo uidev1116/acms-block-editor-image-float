@@ -48,7 +48,7 @@ final class AssetRegistrar
      */
     public static function shouldRegister(mixed $admin, bool $directEdit = false, bool $enabled = true): bool
     {
-        return $enabled && ((is_string($admin) && $admin !== '') || $directEdit);
+        return $enabled && (self::isAdminScreen($admin) || $directEdit);
     }
 
     /**
@@ -61,13 +61,28 @@ final class AssetRegistrar
 
     /**
      * @param mixed $admin The value of the core ADMIN constant (null when undefined)
-     * @param bool $directEdit Whether direct edit is enabled on the current public page
-     * @param bool $enabled Whether the feature is switched on in the plugin settings
+     * @param bool|callable(): bool $directEdit Whether direct edit is enabled on the current public page.
+     *        A callable is only evaluated on public pages (it may be costly).
+     * @param bool|callable(): bool $enabled Whether the feature is switched on in the plugin settings.
+     *        A callable is only evaluated when the block editor can exist on the page (it reads the config).
+     * @param string|null $assetDir Directory holding the built index.js / index.css. When given, nothing is
+     *        registered unless both exist (the build output is not committed, so a deploy can miss it).
      * @return bool Whether assets were registered
      */
-    public function register(mixed $admin, string $dirOffset, bool $directEdit = false, bool $enabled = true): bool
-    {
-        if (!self::shouldRegister($admin, $directEdit, $enabled)) {
+    public function register(
+        mixed $admin,
+        string $dirOffset,
+        bool|callable $directEdit = false,
+        bool|callable $enabled = true,
+        ?string $assetDir = null
+    ): bool {
+        if (!self::isAdminScreen($admin) && !self::resolve($directEdit)) {
+            return false;
+        }
+        if (!self::resolve($enabled)) {
+            return false;
+        }
+        if ($assetDir !== null && !(is_file($assetDir . '/index.js') && is_file($assetDir . '/index.css'))) {
             return false;
         }
         $base = self::basePath($dirOffset);
@@ -79,5 +94,18 @@ final class AssetRegistrar
         ]);
 
         return true;
+    }
+
+    private static function isAdminScreen(mixed $admin): bool
+    {
+        return is_string($admin) && $admin !== '';
+    }
+
+    /**
+     * @param bool|callable(): bool $value
+     */
+    private static function resolve(bool|callable $value): bool
+    {
+        return is_bool($value) ? $value : $value();
     }
 }

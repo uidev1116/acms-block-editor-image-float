@@ -52,7 +52,7 @@ CKEditor 5 の画像スタイル「Images wrapped with text」（`float` を使�
 | `imageBlock` を `extend` して同名で差し替える | 不採用 | 同名拡張の優先順位に依存し、コア更新で壊れやすい。 |
 | 回り込み専用の新ノード | 不採用 | 画像メニュー・メディア差し替えなどコアの機能との統合が切れる。 |
 
-**リスクと対策**：将来コアが `align` の値を `left|center|right` に制限すると動かなくなる。回り込みの判定は `isFloatAlign()` / `floatSideOf()` に集約してある。コア更新後は、保存 → 再読み込みで `data-align="float-left"` が残ることを確認する（README に記載）。
+**リスクと対策**：将来コアが `align` の値を `left|center|right` に制限すると動かなくなる。回り込みの判定は `isFloatAlign()` / `floatSideOf()` に集約してある。コア更新後は、保存 → 再読み込みで `data-align="float-left"` が残ることを確認する（README に記載）。コアの画像ブロックの形への依存は `tests/js/core-contract.test.ts` が、インストール済みの `@ablogcms/block-editor` に対して検査する。
 
 ## 5. 構成
 
@@ -104,7 +104,9 @@ Vite 8 のライブラリモード、出力は IIFE（`src/assets/index.js` と 
 
 - `test.yml`：`quality`（phpcs・PHPStan・PHPUnit カバレッジ）、`frontend`（typecheck・`npm run test:coverage`・build・出力の存在確認）、`phpunit`（PHP 8.1〜8.5 × a-blog cms 3.2）。集約ジョブ `test` が全部を要求する。
 - `release.yml`：`v*` タグで、ビルド → zip 作成 → GitHub Release。タグと `ServiceProvider::$version` の一致を確認する。
-- カバレッジは vitest・PHP ともに 90% 以上を目標にする（vitest はしきい値で強制）。
+- カバレッジは vitest・PHP ともに 90% 以上を目標にする（強制しているのは vitest のしきい値のみ。PHP は `composer coverage` のレポートで確認する）。
+- `release.yml` は、タグが master 上のコミットであること、型チェックとテストが通ること、タグ・`ServiceProvider::$version`・`package.json` の `version` が一致することを確認してから zip を作る。
+- バージョンは `ServiceProvider::$version` と `package.json` の `version` の 2 か所（JS の `register()` には `package.json` の値を vite の `define` で渡す）。`tests/js/version.test.ts` で一致を検査する。
 
 ## 6. 実装仕様
 
@@ -122,7 +124,7 @@ Vite 8 のライブラリモード、出力は IIFE（`src/assets/index.js` と 
 ### 6.2 PHP
 
 - `ServiceProvider`：`$menu = 'block_editor_image_float_index'`。`init()` で Hook を登録し、設定画面のページ（`ADMIN === 'app_block_editor_image_float_index'`）では `admin-main` / `admin-topicpath` にテンプレートを注入する。
-- `Hook::afterBuild(&$res)`：`AssetRegistrar::register(ADMIN, DIR_OFFSET, ダイレクト編集が有効か, 設定がオンか)` を呼ぶだけにする。
+- `Hook::afterBuild(&$res)`：`AssetRegistrar::register(ADMIN, DIR_OFFSET, ダイレクト編集が有効か, 設定がオンか, アセットのディレクトリ)` を呼ぶだけにする。ダイレクト編集の判定と設定の読み込みはクロージャーで渡し、必要なときだけ評価する（管理画面ではダイレクト編集を、ブロックエディターが存在しない公開ページでは設定を読まない）。`assets/index.js` と `index.css` が無いとき（ビルドなしでデプロイされたとき）は何も登録しない。
 - `Services\AssetRegistrar`：読み込むかどうかの判定（`shouldRegister`）とパスの組み立て（`basePath`。`'/' . DIR_OFFSET` から始めるとローカルファイルとして扱われ、更新日時のクエリが自動で付く）を行う。アセット API の呼び出しはコンストラクターで差し替えられる（単体テスト用）。ハンドル名は `block-editor-image-float`（CSS は `-style` を付ける）。
 - `Services\Settings`：設定キー `block_editor_image_float_enabled`（`on` / `off`。既定オン。明示的な `off` のときだけ無効）。ブログのコンフィグから `Config::loadBlogConfig()` で読む（コンフィグセットを使うブログでは `config()` に見えないため）。
 - `Services\Requirements`：最小の a-blog cms バージョン（3.2.36）の判定。
@@ -133,7 +135,7 @@ Vite 8 のライブラリモード、出力は IIFE（`src/assets/index.js` と 
 
 ### 6.4 CSS
 
-- エディター用（`frontend/style.css`）：コアのエディターのルート `.acms-admin-block-editor` の内側に限定する。画像ブロックには `.media-image-block` のクラスではなく `[data-type="imageBlock"]` で当てる。**外側のラッパーではなく、内側の `<figure>` を `float` させる**（外側を float させると幅が shrink-to-fit になり、`figure` のインライン `max-width`（%）が効かなくなる）。`.ProseMirror` に `display: flow-root` を付け、float が下にはみ出さないようにする。見出し（`h2`〜`h6`）には `clear: both` を付ける。
+- エディター用（`frontend/style.css`）：コアのエディターのルート `.acms-admin-block-editor` の内側に限定する。画像ブロックには `.media-image-block` のクラスではなく `[data-type="imageBlock"]` で当てる。**外側のラッパーではなく、内側の `<figure>` を `float` させる**（外側を float させると幅が shrink-to-fit になり、`figure` のインライン `max-width`（%）が効かなくなる）。float させた `<figure>` には `width: 100%` を付け、表示幅はインライン `max-width` で決める（README の公開側 CSS も同じ）。`.ProseMirror` に `display: flow-root` を付け、float が下にはみ出さないようにする。見出し（`h2`〜`h6`）には `clear: both` を付ける。
 - このプラグインが独自に付ける管理画面のクラス名は `acms-admin-` プレフィックスにする（現在は独自クラスなし）。
 - 公開側用の CSS はプラグインに同梱せず、README に掲載する（フロントエンドの責務）。本文の基準となるクラス `.acms-entry` の内側に限定し、画像ブロックには `[data-type="imageBlock"]` で当てる。本文の基準クラスはテーマによって異なるため、README に「テーマに合わせて読み替える」と明記する。
 

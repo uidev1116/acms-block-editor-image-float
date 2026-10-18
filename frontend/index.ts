@@ -7,7 +7,7 @@ export const PLUGIN_NAME = 'block-editor-image-float';
 
 const registerPlugin = () =>
   register(PLUGIN_NAME, {
-    version: '0.1.0',
+    version: __PLUGIN_VERSION__,
     setup(ctx) {
       ctx.i18n.addResources('ja', resources.ja);
       ctx.i18n.addResources('en', resources.en);
