@@ -24,6 +24,9 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "@ablogcms/*"
+      # @tiptap/* must stay on the version @ablogcms/block-editor uses. A different version installs a second
+      # copy of @tiptap/core and breaks the Editor types, so bump them by hand with @ablogcms/*.
+      - dependency-name: "@tiptap/*"
       # typescript-eslint does not support TypeScript 7 yet (peer typescript <6.1). Revisit when it does.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
@@ -40,6 +43,13 @@ updates:
       # Development dependencies: major, minor and patch updates are all grouped.
       npm-development:
         dependency-type: "development"
+      # Everything else (mainly indirect dependencies, which the groups above do not match): minor and patch only.
+      npm-other:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "composer"
     directory: "/"
     schedule:
@@ -59,3 +69,10 @@ updates:
       # Development dependencies: major, minor and patch updates are all grouped.
       composer-development:
         dependency-type: "development"
+      # Everything else (mainly indirect dependencies, which the groups above do not match): minor and patch only.
+      composer-other:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
